@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "agent-box": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772780755,
+        "narHash": "sha256-XiyMjdqcmIDiO/986CEj8znCd6mLYex9DYlBUDG5p0c=",
+        "owner": "0xferrous",
+        "repo": "agent-box",
+        "rev": "8fad4136b34f65784f2631aaa44ad9327a4ad39d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "0xferrous",
+        "repo": "agent-box",
+        "type": "github"
+      }
+    },
     "blueprint": {
       "inputs": {
         "nixpkgs": [
@@ -170,6 +186,7 @@
     },
     "root": {
       "inputs": {
+        "agent-box": "agent-box",
         "flake-utils": "flake-utils",
         "llm-agents": "llm-agents",
         "nixpkgs": "nixpkgs_2"

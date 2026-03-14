@@ -1,3 +1,4 @@
 *.code-workspace
+.direnv
 result
 result-*
