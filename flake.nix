@@ -40,6 +40,7 @@
           codex = import ./agents/codex.nix { inherit mkAgentImage agents pkgs; };
           gemini = import ./agents/gemini.nix { inherit mkAgentImage agents pkgs; };
           opencode = import ./agents/opencode.nix { inherit mkAgentImage agents pkgs; };
+          pi = import ./agents/pi.nix { inherit mkAgentImage agents pkgs; };
         };
 
         devShells.default = pkgs.mkShell {

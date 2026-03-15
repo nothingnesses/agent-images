@@ -16,13 +16,14 @@ llm-agents.nix (packages)  →  agent-images (images)  →  agent-box (orchestra
 | `codex` | [Codex CLI](https://github.com/openai/codex) | `nix build .#codex` |
 | `gemini` | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `nix build .#gemini` |
 | `opencode` | [OpenCode](https://github.com/opencode-ai/opencode) | `nix build .#opencode` |
+| `pi` | [pi](https://github.com/mariozechner/pi) | `nix build .#pi` |
 
 Each image includes: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, less, curl, and CA certificates. Containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory.
 
 ## Quick Start
 
 ```bash
-# Replace <agent> with one of: claude-code, codex, gemini, opencode
+# Replace <agent> with one of: claude-code, codex, gemini, opencode, pi
 nix build .#<agent>
 podman load < result
 podman run --rm localhost/agent-images/<agent>:latest --version
@@ -75,7 +76,7 @@ base_repo_dir = "~/path/to/your/projects"
 
 [runtime]
 backend = "podman"
-# Replace <agent> with one of: claude-code, codex, gemini, opencode
+# Replace <agent> with one of: claude-code, codex, gemini, opencode, pi
 image = "localhost/agent-images/<agent>:latest"
 env_passthrough = ["ANTHROPIC_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY"]
 ```
@@ -124,7 +125,7 @@ To verify that worktree mode hides gitignored files:
 
 ```bash
 # Build an image first (creates a `result` symlink, which is gitignored)
-# Replace <agent> with one of: claude-code, codex, gemini, opencode
+# Replace <agent> with one of: claude-code, codex, gemini, opencode, pi
 nix build .#<agent>
 
 # Local mode — agent CAN see result
