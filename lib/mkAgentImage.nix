@@ -25,6 +25,9 @@ in
   tag ? "latest",
   agent,
   entrypoint,
+  user ? "agent",
+  uid ? 1000,
+  workingDir ? "/workspace",
   basePackages ? defaultBasePackages,
   extraPackages ? [],
   extraEnv ? {},
@@ -32,6 +35,7 @@ in
 
 let
   allPackages = [ agent ] ++ basePackages ++ extraPackages;
+  home = "/home/${user}";
 in
 pkgs.dockerTools.buildLayeredImage {
   meta = agent.meta or {};
@@ -39,29 +43,29 @@ pkgs.dockerTools.buildLayeredImage {
   contents = allPackages;
 
   fakeRootCommands = ''
-    mkdir -p ./etc ./home/agent ./tmp ./workspace
+    mkdir -p ./etc .${home} ./tmp .${workingDir}
     cat > ./etc/passwd <<'PASSWD'
     root:x:0:0:root:/root:/bin/bash
-    agent:x:1000:1000:agent:/home/agent:/bin/bash
+    ${user}:x:${toString uid}:${toString uid}:${user}:${home}:/bin/bash
     PASSWD
     cat > ./etc/group <<'GROUP'
     root:x:0:
-    agent:x:1000:
+    ${user}:x:${toString uid}:
     GROUP
     cat > ./etc/nsswitch.conf <<'NSS'
     hosts: files dns
     NSS
     chmod 1777 ./tmp
-    chown 1000:1000 ./home/agent ./workspace
+    chown ${toString uid}:${toString uid} .${home} .${workingDir}
   '';
 
   config = {
-    User = "agent";
-    WorkingDir = "/workspace";
+    User = user;
+    WorkingDir = workingDir;
     Entrypoint = entrypoint;
     Env = [
-      "HOME=/home/agent"
-      "USER=agent"
+      "HOME=${home}"
+      "USER=${user}"
       "PATH=${lib.makeBinPath allPackages}"
       "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
     ] ++ (lib.mapAttrsToList (k: v: "${k}=${v}") extraEnv);

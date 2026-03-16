@@ -57,7 +57,7 @@ reproducible and easy to customise.
 | `picoclaw` | [PicoClaw](https://picoclaw.io) | `nix build .#picoclaw` |
 | `zeroclaw` | [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw) | `nix build .#zeroclaw` |
 
-Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). Containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory.
+Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). By default, containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory. Both the user and working directory can be customised (see [Custom Images](#custom-images)).
 
 ## Quick Start
 
@@ -268,6 +268,21 @@ mkAgentImage {
   agent = my-agent-package;
   entrypoint = [ "my-agent" ];
   basePackages = with pkgs; [ bashInteractive coreutils git cacert ];
+}
+```
+
+### Customising User and Working Directory
+
+By default, containers run as user `agent` (uid 1000) with `/workspace` as the working directory. Override these with `user`, `uid`, and `workingDir`:
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  user = "dev";
+  uid = 1001;
+  workingDir = "/project";
 }
 ```
 
