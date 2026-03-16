@@ -60,7 +60,7 @@ nix search . ^
 
 # Replace <agent> with any image name from the table above
 nix build .#<agent>
-podman load < result
+podman load < result  # or: docker load < result
 podman run --rm localhost/agent-images/<agent>:latest --version
 ```
 
@@ -97,6 +97,15 @@ agent
 /workspace
 /nix/store/.../bin/git
 /nix/store/.../bin/rg
+```
+
+### Smoke Test
+
+To run the build, load, and verification steps automatically:
+
+```bash
+nix run .#smoke-test           # defaults to opencode
+nix run .#smoke-test -- codex  # or specify any agent
 ```
 
 ## Usage with agent-box

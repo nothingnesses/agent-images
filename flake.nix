@@ -84,6 +84,55 @@
         devShells.default = pkgs.mkShell {
           packages = [ ab ];
         };
+
+        apps.smoke-test = let
+          script = pkgs.writeShellScript "smoke-test" ''
+            set -euo pipefail
+
+            agent="''${1:-opencode}"
+            image="localhost/agent-images/$agent:latest"
+
+            if command -v podman &>/dev/null; then
+              runtime=podman
+            elif command -v docker &>/dev/null; then
+              runtime=docker
+            else
+              echo "ERROR: neither podman nor docker found"
+              exit 1
+            fi
+
+            echo "==> Building $agent"
+            nix build ".#$agent"
+
+            echo "==> Loading image ($runtime)"
+            $runtime load < result
+
+            echo "==> Checking --version"
+            $runtime run --rm "$image" --version
+
+            echo "==> Verifying container internals"
+            output=$($runtime run --rm --entrypoint sh "$image" -c \
+              'whoami && echo $HOME && pwd && command -v git && command -v rg')
+
+            user=$(echo "$output" | sed -n '1p')
+            home=$(echo "$output" | sed -n '2p')
+            workdir=$(echo "$output" | sed -n '3p')
+
+            fail=0
+            [ "$user" = "agent" ]      || { echo "FAIL: user is '$user', expected 'agent'"; fail=1; }
+            [ "$home" = "/home/agent" ] || { echo "FAIL: HOME is '$home', expected '/home/agent'"; fail=1; }
+            [ "$workdir" = "/workspace" ] || { echo "FAIL: workdir is '$workdir', expected '/workspace'"; fail=1; }
+
+            if [ "$fail" -eq 0 ]; then
+              echo "==> All checks passed for $agent"
+            else
+              exit 1
+            fi
+          '';
+        in {
+          type = "app";
+          program = "${script}";
+        };
       }
     );
 }
