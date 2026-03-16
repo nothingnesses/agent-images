@@ -17,7 +17,7 @@ llm-agents.nix (packages)  →  agent-images (images)  →  agent-box (orchestra
 | `gemini` | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `nix build .#gemini` |
 | `opencode` | [OpenCode](https://github.com/opencode-ai/opencode) | `nix build .#opencode` |
 
-Each image includes: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, less, curl, and CA certificates. Containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory.
+Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). Containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory.
 
 ## Quick Start
 
@@ -211,6 +211,19 @@ Use `mkAgentImage` to build your own agent images:
         extraEnv = { MY_VAR = "value"; };
       };
     };
+}
+```
+
+### Overriding Base Packages
+
+By default, images include a standard set of CLI tools (bash, coreutils, git, etc.). Pass `basePackages` to replace them entirely:
+
+```nix
+mkAgentImage {
+  name = "my-minimal-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  basePackages = with pkgs; [ bashInteractive coreutils git cacert ];
 }
 ```
 

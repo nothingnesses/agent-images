@@ -5,7 +5,8 @@
 Build and load the image:
 
 ```bash
-nix build github:user/agent-images#claude-code
+# Replace <agent> with one of: claude-code, codex, gemini, opencode
+nix build .#<agent>
 podman load < result
 ```
 
@@ -14,7 +15,8 @@ Configure agent-box to use it:
 ```toml
 # ~/.agent-box.toml
 [runtime]
-image = "agent-images/claude-code:latest"
+# Replace <agent> with one of: claude-code, codex, gemini, opencode
+image = "agent-images/<agent>:latest"
 backend = "podman"
 ```
 

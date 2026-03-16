@@ -1,16 +1,7 @@
 { pkgs, lib }:
 
-{
-  name,
-  tag ? "latest",
-  agent,
-  entrypoint,
-  extraPackages ? [],
-  extraEnv ? {},
-}:
-
 let
-  basePackages = with pkgs; [
+  defaultBasePackages = with pkgs; [
     bashInteractive
     coreutils
     findutils
@@ -27,7 +18,19 @@ let
     gnutar
     gzip
   ];
+in
 
+{
+  name,
+  tag ? "latest",
+  agent,
+  entrypoint,
+  basePackages ? defaultBasePackages,
+  extraPackages ? [],
+  extraEnv ? {},
+}:
+
+let
   allPackages = [ agent ] ++ basePackages ++ extraPackages;
 in
 pkgs.dockerTools.buildLayeredImage {
