@@ -34,6 +34,7 @@ let
   allPackages = [ agent ] ++ basePackages ++ extraPackages;
 in
 pkgs.dockerTools.buildLayeredImage {
+  meta = agent.meta or {};
   inherit name tag;
   contents = allPackages;
 
