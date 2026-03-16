@@ -5,7 +5,7 @@
 Build and load the image:
 
 ```bash
-# Replace <agent> with one of: claude-code, codex, gemini, opencode
+# Replace <agent> with any image name (see README for full list)
 nix build .#<agent>
 podman load < result
 ```
@@ -15,7 +15,7 @@ Configure agent-box to use it:
 ```toml
 # ~/.agent-box.toml
 [runtime]
-# Replace <agent> with one of: claude-code, codex, gemini, opencode
+# Replace <agent> with any image name (see README for full list)
 image = "agent-images/<agent>:latest"
 backend = "podman"
 ```
@@ -40,9 +40,9 @@ backend = "podman"
 [profiles.codex.runtime]
 image = "agent-images/codex:latest"
 
-[profiles.gemini]
-[profiles.gemini.runtime]
-image = "agent-images/gemini:latest"
+[profiles.gemini-cli]
+[profiles.gemini-cli.runtime]
+image = "agent-images/gemini-cli:latest"
 ```
 
 ```bash

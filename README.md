@@ -10,19 +10,52 @@ llm-agents.nix (packages)  →  agent-images (images)  →  agent-box (orchestra
 
 ## Available Images
 
+#### AI Coding Agents
+
 | Image | Agent | Build |
 |-------|-------|-------|
-| `claude-code` | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | `nix build .#claude-code` |
+| `amp` | [Amp](https://ampcode.com/) | `nix build .#amp` |
+| `claude-code` | [Claude Code](https://claude.ai/code) | `nix build .#claude-code` |
+| `cli-proxy-api` | [CLI Proxy API](https://github.com/router-for-me/CLIProxyAPI) | `nix build .#cli-proxy-api` |
+| `code` | [Code](https://github.com/just-every/code/) | `nix build .#code` |
 | `codex` | [Codex CLI](https://github.com/openai/codex) | `nix build .#codex` |
-| `gemini` | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `nix build .#gemini` |
-| `opencode` | [OpenCode](https://github.com/opencode-ai/opencode) | `nix build .#opencode` |
+| `copilot-cli` | [Copilot CLI](https://github.com/github/copilot-cli) | `nix build .#copilot-cli` |
+| `crush` | [Crush](https://github.com/charmbracelet/crush) | `nix build .#crush` |
+| `cursor-agent` | [Cursor Agent](https://cursor.com/) | `nix build .#cursor-agent` |
+| `droid` | [Droid](https://factory.ai) | `nix build .#droid` |
+| `eca` | [ECA](https://github.com/editor-code-assistant/eca) | `nix build .#eca` |
+| `forge` | [Forge](https://github.com/antinomyhq/forge) | `nix build .#forge` |
+| `gemini-cli` | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `nix build .#gemini-cli` |
+| `goose-cli` | [Goose](https://github.com/block/goose) | `nix build .#goose-cli` |
+| `iflow-cli` | [iFlow CLI](https://github.com/iflow-ai/iflow-cli) | `nix build .#iflow-cli` |
+| `jules` | [Jules](https://jules.google) | `nix build .#jules` |
+| `kilocode-cli` | [Kilocode CLI](https://kilocode.ai/cli) | `nix build .#kilocode-cli` |
+| `letta-code` | [Letta Code](https://github.com/letta-ai/letta-code) | `nix build .#letta-code` |
+| `mistral-vibe` | [Mistral Vibe](https://github.com/mistralai/mistral-vibe) | `nix build .#mistral-vibe` |
+| `nanocoder` | [Nanocoder](https://github.com/Mote-Software/nanocoder) | `nix build .#nanocoder` |
+| `oh-my-opencode` | [Oh My OpenCode](https://github.com/code-yeongyu/oh-my-openagent) | `nix build .#oh-my-opencode` |
+| `omp` | [OMP](https://github.com/can1357/oh-my-pi) | `nix build .#omp` |
+| `opencode` | [OpenCode](https://github.com/anomalyco/opencode) | `nix build .#opencode` |
+| `pi` | [Pi](https://github.com/badlogic/pi-mono) | `nix build .#pi` |
+| `qoder-cli` | [Qoder CLI](https://qoder.com) | `nix build .#qoder-cli` |
+| `qwen-code` | [Qwen Code](https://github.com/QwenLM/qwen-code) | `nix build .#qwen-code` |
+
+#### AI Assistants
+
+| Image | Agent | Build |
+|-------|-------|-------|
+| `hermes-agent` | [Hermes Agent](https://hermes-agent.nousresearch.com/) | `nix build .#hermes-agent` |
+| `localgpt` | [LocalGPT](https://github.com/localgpt-app/localgpt) | `nix build .#localgpt` |
+| `openclaw` | [OpenClaw](https://openclaw.ai) | `nix build .#openclaw` |
+| `picoclaw` | [PicoClaw](https://picoclaw.io) | `nix build .#picoclaw` |
+| `zeroclaw` | [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw) | `nix build .#zeroclaw` |
 
 Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). Containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory.
 
 ## Quick Start
 
 ```bash
-# Replace <agent> with one of: claude-code, codex, gemini, opencode
+# Replace <agent> with any image name from the table above
 nix build .#<agent>
 podman load < result
 podman run --rm localhost/agent-images/<agent>:latest --version
@@ -75,7 +108,7 @@ base_repo_dir = "~/path/to/your/projects"
 
 [runtime]
 backend = "podman"
-# Replace <agent> with one of: claude-code, codex, gemini, opencode
+# Replace <agent> with any image name from the table above
 image = "localhost/agent-images/<agent>:latest"
 env_passthrough = ["ANTHROPIC_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY"]
 ```
@@ -108,7 +141,7 @@ ab spawn -s my-session --git
 Use `--entrypoint` to override the default entrypoint and `-c` for arguments:
 
 ```bash
-# Check agent version (replace <entrypoint> with: claude, codex, gemini, opencode)
+# Check agent version
 ab spawn --local --entrypoint <entrypoint> -c="--version"
 
 # Read a file
@@ -124,7 +157,7 @@ To verify that worktree mode hides gitignored files:
 
 ```bash
 # Build an image first (creates a `result` symlink, which is gitignored)
-# Replace <agent> with one of: claude-code, codex, gemini, opencode
+# Replace <agent> with any image name from the table above
 nix build .#<agent>
 
 # Local mode — agent CAN see result

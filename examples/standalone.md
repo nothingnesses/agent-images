@@ -3,7 +3,7 @@
 ## Build and load an image
 
 ```bash
-# Replace <agent> with one of: claude-code, codex, gemini, opencode
+# Replace <agent> with any image name (see README for full list)
 nix build .#<agent>
 
 # Load into Podman

@@ -35,21 +35,47 @@
         };
 
         agentConfigs = {
-          claude-code = {
-            entrypoint = "claude";
-            extraPackages = [ pkgs.nodejs ];
-          };
+          # AI Coding Agents
+          amp = {};
+          claude-code = {};
+          cli-proxy-api = {};
+          code = {};
           codex = {};
-          gemini = { agentPkg = "gemini-cli"; };
+          copilot-cli = {};
+          crush = {};
+          cursor-agent = {};
+          droid = {};
+          eca = {};
+          forge = {};
+          gemini-cli = {};
+          goose-cli = {};
+          iflow-cli = {};
+          jules = {};
+          kilocode-cli = {};
+          letta-code = {};
+          mistral-vibe = {};
+          nanocoder = {};
+          oh-my-opencode = {};
+          omp = {};
           opencode = {};
+          pi = {};
+          qoder-cli = {};
+          qwen-code = {};
+          # AI Assistants
+          hermes-agent = {};
+          localgpt = {};
+          openclaw = {};
+          picoclaw = {};
+          zeroclaw = {};
         };
       in
       {
         packages = lib.mapAttrs (name: cfg:
-          mkAgentImage {
+          let agent = agents.${cfg.agentPkg or name};
+          in mkAgentImage {
             name = "agent-images/${name}";
-            agent = agents.${cfg.agentPkg or name};
-            entrypoint = [ (cfg.entrypoint or name) ];
+            inherit agent;
+            entrypoint = [ agent.meta.mainProgram ];
             extraPackages = cfg.extraPackages or [];
             extraEnv = cfg.extraEnv or {};
           }
