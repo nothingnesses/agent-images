@@ -8,6 +8,13 @@ Consumes agent packages from [llm-agents.nix](https://github.com/numtide/llm-age
 llm-agents.nix (packages)  →  agent-images (images)  →  agent-box (orchestration)
 ```
 
+## Why
+
+AI coding agents need access to your filesystem to be useful, but that means
+they can also read secrets like SSH keys, cloud credentials, and API tokens.
+Running agents inside containers limits what they can see. Nix makes the images
+reproducible and easy to customise.
+
 ## Available Images
 
 #### AI Coding Agents
