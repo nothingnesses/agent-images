@@ -33,14 +33,27 @@
           cargoBuildFlags = [ "-p" "ab" ];
           cargoTestFlags = [ "-p" "ab" ];
         };
+
+        agentConfigs = {
+          claude-code = {
+            entrypoint = "claude";
+            extraPackages = [ pkgs.nodejs ];
+          };
+          codex = {};
+          gemini = { agentPkg = "gemini-cli"; };
+          opencode = {};
+        };
       in
       {
-        packages = {
-          claude-code = import ./agents/claude-code.nix { inherit mkAgentImage agents pkgs; };
-          codex = import ./agents/codex.nix { inherit mkAgentImage agents pkgs; };
-          gemini = import ./agents/gemini.nix { inherit mkAgentImage agents pkgs; };
-          opencode = import ./agents/opencode.nix { inherit mkAgentImage agents pkgs; };
-        };
+        packages = lib.mapAttrs (name: cfg:
+          mkAgentImage {
+            name = "agent-images/${name}";
+            agent = agents.${cfg.agentPkg or name};
+            entrypoint = [ (cfg.entrypoint or name) ];
+            extraPackages = cfg.extraPackages or [];
+            extraEnv = cfg.extraEnv or {};
+          }
+        ) agentConfigs;
 
         devShells.default = pkgs.mkShell {
           packages = [ ab ];
