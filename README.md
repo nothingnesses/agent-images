@@ -55,6 +55,9 @@ Each image includes a default set of base packages: git, coreutils, bash, ripgre
 ## Quick Start
 
 ```bash
+# List all available images with descriptions
+nix search . ^
+
 # Replace <agent> with any image name from the table above
 nix build .#<agent>
 podman load < result
@@ -113,7 +116,7 @@ image = "localhost/agent-images/<agent>:latest"
 env_passthrough = ["ANTHROPIC_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY"]
 ```
 
-`base_repo_dir` must be the real (non-symlinked) parent directory containing your git repositories. Agent-box resolves symlinks, so symlinking repos into a separate directory will not work. Add the API key environment variables for whichever providers you use.
+`base_repo_dir` must be the real (non-symlinked) parent directory containing your git repositories. Agent-box resolves symlinks, so symlinking repos into a separate directory will not work. Add any other API keys your agent requires to `env_passthrough`.
 
 ### Local Mode
 
@@ -188,15 +191,6 @@ users.users.<USERNAME> = {
   subUidRanges = [{ startUid = 100000; count = 65536; }];
   subGidRanges = [{ startGid = 100000; count = 65536; }];
 };
-
-# The subUidRanges/subGidRanges options above do not reliably generate
-# /etc/subuid and /etc/subgid. These environment.etc entries ensure the
-# files exist. Without them, Podman cannot map container UIDs and images
-# with non-root users will fail to load.
-environment.etc = {
-  "subuid".text = "<USERNAME>:100000:65536";
-  "subgid".text = "<USERNAME>:100000:65536";
-};
 ```
 
 Then rebuild: `sudo nixos-rebuild switch`
@@ -213,15 +207,16 @@ You also need a container trust policy. Create `~/.config/containers/policy.json
 }
 ```
 
-### Corrupted Storage Recovery
+### Troubleshooting
 
-If you load an image while `/etc/subuid` is missing, Podman's storage gets corrupted (layers unpacked with wrong UID mappings). Fix with:
+**Corrupted storage after failed load.** If `podman load` fails (e.g. because `/etc/subuid` was missing), Podman's storage may be corrupted. Fix with:
 
 ```bash
 podman system reset --force
-# Ensure /etc/subuid and /etc/subgid exist, then reload
 podman load < result
 ```
+
+**`newuidmap: Too many levels of symbolic links`.** This happens when `/etc/subuid` is a symlink (e.g. from `environment.etc` entries). NixOS setuid wrappers cannot follow symlinks. Remove any `environment.etc` entries for `subuid`/`subgid` and rely solely on `subUidRanges`/`subGidRanges`, which create real files. Rebuild and then reset Podman storage.
 
 ## Custom Images
 
