@@ -14,22 +14,30 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix flake show
 
-  smoke-test:
+  shellcheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
-      - run: nix run .#smoke-test
+      - run: nix run .#shellcheck
 
-  smoke-test-nix:
+  test-default:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
-      - run: nix run .#smoke-test-nix
-      - run: nix run .#smoke-test-nix-install
+      - run: nix run .#test-default
+
+  test-nix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix run .#test-nix
+      - run: nix run .#test-nix-install
       - name: Report image size delta
         run: |
           nix build .#opencode -o result-base
@@ -41,18 +49,18 @@ jobs:
           echo "withNix image: $(( nix_size / 1048576 )) MB"
           echo "Delta: $(( delta / 1048576 )) MB"
 
-  smoke-test-custom:
+  test-custom:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
-      - run: nix run .#smoke-test-custom
+      - run: nix run .#test-custom
 
-  smoke-test-nix-custom:
+  test-nix-custom:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
-      - run: nix run .#smoke-test-nix-custom
+      - run: nix run .#test-nix-custom

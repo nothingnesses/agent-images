@@ -113,15 +113,6 @@ agent
 /nix/store/.../bin/rg
 ```
 
-### Smoke Test
-
-To run the build, load, and verification steps automatically:
-
-```bash
-nix run .#smoke-test           # defaults to opencode
-nix run .#smoke-test -- codex  # or specify any agent
-```
-
 ## Usage with agent-box
 
 ### Global Configuration
@@ -378,13 +369,24 @@ podman run --rm -it \
 
 This is useful for reducing disk usage but couples the container to the host's Nix installation.
 
-### Smoke Tests
+## Development
+
+### Tests
 
 ```bash
-nix run .#smoke-test-nix           # basic Nix checks (offline)
-nix run .#smoke-test-nix-install   # runtime install + nix develop (requires network)
-nix run .#smoke-test-nix-custom    # custom user/uid, experimental features, extraEnv (with Nix)
-nix run .#smoke-test-custom        # custom user/uid/workingDir, extraPackages, extraEnv (without Nix)
+nix run .#test-default                    # default image (opencode)
+AGENT=codex nix run .#test-default        # or specify any agent
+nix run .#test-nix                        # basic Nix checks (offline)
+nix run .#test-nix-install                # runtime install + nix develop (requires network)
+nix run .#test-nix-custom                 # custom user/uid, experimental features, extraEnv (with Nix)
+nix run .#test-custom                     # custom user/uid/workingDir, extraPackages, extraEnv (without Nix)
+nix run .#test                            # run all of the above
+```
+
+### Linting
+
+```bash
+nix run .#shellcheck  # run shellcheck across all test files
 ```
 
 ## License
