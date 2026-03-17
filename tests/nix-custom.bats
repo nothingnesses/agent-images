@@ -43,19 +43,19 @@ setup() {
 @test "nix.conf has pipe-operators" {
   run run_in "${IMAGE}" 'cat /etc/nix/nix.conf'
   [ "${status}" -eq 0 ]
-  [[ "${output}" == *"pipe-operators"* ]]
+  [[ ${output} == *"pipe-operators"* ]]
 }
 
 @test "nix.conf has nix-command" {
   run run_in "${IMAGE}" 'cat /etc/nix/nix.conf'
   [ "${status}" -eq 0 ]
-  [[ "${output}" == *"nix-command"* ]]
+  [[ ${output} == *"nix-command"* ]]
 }
 
 @test "nix.conf has flakes" {
   run run_in "${IMAGE}" 'cat /etc/nix/nix.conf'
   [ "${status}" -eq 0 ]
-  [[ "${output}" == *"flakes"* ]]
+  [[ ${output} == *"flakes"* ]]
 }
 
 @test "extraEnv MY_VAR is set" {

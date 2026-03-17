@@ -14,17 +14,41 @@
       url = "github:0xferrous/agent-box";
       flake = false;
     };
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    git-hooks = {
+      url = "github:cachix/git-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, llm-agents, flake-utils, agent-box }:
+  outputs =
     {
-      lib.mkAgentImage = { pkgs, lib ? pkgs.lib }:
+      self,
+      nixpkgs,
+      llm-agents,
+      flake-utils,
+      agent-box,
+      treefmt-nix,
+      git-hooks,
+    }:
+    {
+      lib.mkAgentImage =
+        {
+          pkgs,
+          lib ? pkgs.lib,
+        }:
         import ./lib/mkAgentImage.nix { inherit pkgs lib; };
     }
-    //
-    flake-utils.lib.eachDefaultSystem (system:
+    // flake-utils.lib.eachDefaultSystem (
+      system:
       let
-        pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
         lib = pkgs.lib;
         agents = llm-agents.packages.${system};
 
@@ -35,43 +59,49 @@
           version = "0.1.0";
           src = agent-box;
           cargoLock.lockFile = "${agent-box}/Cargo.lock";
-          cargoBuildFlags = [ "-p" "ab" ];
-          cargoTestFlags = [ "-p" "ab" ];
+          cargoBuildFlags = [
+            "-p"
+            "ab"
+          ];
+          cargoTestFlags = [
+            "-p"
+            "ab"
+          ];
         };
 
         agentConfigs = {
           # AI Coding Agents
-          amp = {};
-          claude-code = {};
-          cli-proxy-api = {};
-          code = {};
-          codex = {};
-          copilot-cli = {};
-          crush = {};
-          cursor-agent = {};
-          droid = {};
-          eca = {};
-          forge = {};
-          gemini-cli = {};
-          goose-cli = {};
-          iflow-cli = {};
-          jules = {};
-          kilocode-cli = {};
-          letta-code = {};
-          mistral-vibe = {};
-          nanocoder = {};
-          oh-my-opencode = {};
-          omp = {};
-          opencode = {};
-          pi = {};
-          qoder-cli = {};
-          qwen-code = {};
+          amp = { };
+          claude-code = { };
+          cli-proxy-api = { };
+          code = { };
+          codex = { };
+          copilot-cli = { };
+          crush = { };
+          cursor-agent = { };
+          droid = { };
+          eca = { };
+          forge = { };
+          gemini-cli = { };
+          goose-cli = { };
+          iflow-cli = { };
+          jules = { };
+          kilocode-cli = { };
+          letta-code = { };
+          mistral-vibe = { };
+          nanocoder = { };
+          oh-my-opencode = { };
+          omp = { };
+          opencode = { };
+          pi = { };
+          qoder-cli = { };
+          qwen-code = { };
           # AI Assistants
-          hermes-agent = {};
-          localgpt = {};
-          openclaw = {};
-          picoclaw = {};
-          zeroclaw = {};
+          hermes-agent = { };
+          localgpt = { };
+          openclaw = { };
+          picoclaw = { };
+          zeroclaw = { };
         };
 
         # Test images
@@ -89,8 +119,14 @@
           withNix = true;
           user = "ci";
           uid = 1001;
-          nixExperimentalFeatures = [ "nix-command" "flakes" "pipe-operators" ];
-          extraEnv = { MY_VAR = "test-value"; };
+          nixExperimentalFeatures = [
+            "nix-command"
+            "flakes"
+            "pipe-operators"
+          ];
+          extraEnv = {
+            MY_VAR = "test-value";
+          };
         };
 
         customTestImage = mkAgentImage {
@@ -101,41 +137,95 @@
           uid = 1002;
           workingDir = "/project";
           extraPackages = [ pkgs.hello ];
-          extraEnv = { CUSTOM_VAR = "custom-value"; };
+          extraEnv = {
+            CUSTOM_VAR = "custom-value";
+          };
         };
 
         testsDir = ./tests;
 
-        mkTest = { name, vars ? {} }: let
-          varDefs = lib.concatStringsSep "\n" (lib.mapAttrsToList (k: v: "export ${k}=\"${v}\"") vars);
-          script = pkgs.writeShellScript name ''
-            set -euo pipefail
-            ${varDefs}
-            ${pkgs.bats}/bin/bats ${testsDir}/${name}.bats
-          '';
-        in {
-          type = "app";
-          program = "${script}";
-        };
-      in
-      {
-        packages = (lib.mapAttrs (name: cfg:
-          let agent = agents.${cfg.agentPkg or name};
-          in mkAgentImage {
-            name = "agent-images/${name}";
-            inherit agent;
-            entrypoint = [ agent.meta.mainProgram ];
-            extraPackages = cfg.extraPackages or [];
-            extraEnv = cfg.extraEnv or {};
-          }
-        ) agentConfigs) // {
-          nix-test-image = nixTestImage;
-          nix-test-image-custom = nixTestImageCustom;
-          custom-test-image = customTestImage;
+        treefmtEval = treefmt-nix.lib.evalModule pkgs {
+          projectRootFile = "flake.nix";
+          programs = {
+            nixfmt.enable = true;
+            shfmt = {
+              enable = true;
+              indent_size = 2;
+              includes = [
+                "*.sh"
+                "*.bash"
+                "*.bats"
+              ];
+            };
+            prettier = {
+              enable = true;
+              includes = [
+                "*.md"
+                "*.yml"
+                "*.yaml"
+              ];
+            };
+          };
         };
 
+        pre-commit-check = git-hooks.lib.${system}.run {
+          src = ./.;
+          hooks.treefmt = {
+            enable = true;
+            package = treefmtEval.config.build.wrapper;
+          };
+        };
+
+        mkTest =
+          {
+            name,
+            vars ? { },
+          }:
+          let
+            varDefs = lib.concatStringsSep "\n" (lib.mapAttrsToList (k: v: "export ${k}=\"${v}\"") vars);
+            script = pkgs.writeShellScript name ''
+              set -euo pipefail
+              ${varDefs}
+              ${pkgs.bats}/bin/bats ${testsDir}/${name}.bats
+            '';
+          in
+          {
+            type = "app";
+            program = "${script}";
+          };
+      in
+      {
+        packages =
+          (lib.mapAttrs (
+            name: cfg:
+            let
+              agent = agents.${cfg.agentPkg or name};
+            in
+            mkAgentImage {
+              name = "agent-images/${name}";
+              inherit agent;
+              entrypoint = [ agent.meta.mainProgram ];
+              extraPackages = cfg.extraPackages or [ ];
+              extraEnv = cfg.extraEnv or { };
+            }
+          ) agentConfigs)
+          // {
+            nix-test-image = nixTestImage;
+            nix-test-image-custom = nixTestImageCustom;
+            custom-test-image = customTestImage;
+          };
+
+        formatter = treefmtEval.config.build.wrapper;
+
+        checks.pre-commit-check = pre-commit-check;
+
         devShells.default = pkgs.mkShell {
-          packages = [ ab pkgs.bats pkgs.shellcheck ];
+          packages = [
+            ab
+            pkgs.bats
+            pkgs.shellcheck
+          ];
+          inherit (pre-commit-check) shellHook;
         };
 
         apps = {

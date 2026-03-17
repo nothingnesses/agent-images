@@ -4,7 +4,7 @@ Tracking issue: https://github.com/nothingnesses/agent-images/issues/2
 
 ## Context
 
-`agent-images` uses Nix to build OCI container images, but using Nix *inside* the resulting containers is not currently supported. For users working in repositories built around `flake.nix`, `shell.nix`, `default.nix`, `devenv`, or NixOS/Home Manager configurations, this creates a gap between how the image is produced and how the agent can work once running.
+`agent-images` uses Nix to build OCI container images, but using Nix _inside_ the resulting containers is not currently supported. For users working in repositories built around `flake.nix`, `shell.nix`, `default.nix`, `devenv`, or NixOS/Home Manager configurations, this creates a gap between how the image is produced and how the agent can work once running.
 
 The proposal is to add an opt-in `withNix = true` flag to `mkAgentImage` that enables Nix workflows inside the container. This keeps default images small while making Nix-heavy workflows available when needed.
 

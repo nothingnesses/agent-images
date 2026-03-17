@@ -5,6 +5,7 @@ Based on [analysis.md](analysis.md). Implements single-user Nix with `sandbox = 
 ## Status: implemented and tested
 
 All steps below have been completed. Manual testing confirmed:
+
 - `nix --version` works
 - Store DB is populated (140 paths registered)
 - `/nix/store` is writable by the agent user (container overlay)
@@ -14,18 +15,18 @@ All steps below have been completed. Manual testing confirmed:
 
 ## Decisions applied
 
-| Issue | Approach |
-|---|---|
-| Writable `/nix/store` | Container overlay provides write access; no chown on store needed |
-| Daemon | None - single-user mode |
-| Rootless Podman UIDs | Sidestepped by single-user mode |
-| Build sandbox | `sandbox = false` by default |
-| Nix version | nixpkgs-pinned default + `nixPackage` parameter override |
-| `nix develop` / direnv | `nix develop` works out of the box; direnv documented as `extraPackages` example |
-| Store ownership | `chown -R ./nix` in `fakeRootCommands` (only affects `./nix/var`; `./nix/store` doesn't exist at build time) |
-| Store registration | `includeNixDB` from nixpkgs' `buildLayeredImage` (upstream `mkDbExtraCommand`) |
-| `NIX_PATH` | Set to `nixpkgs=${pkgs.path}` so `nix-shell -p` works |
-| Image size | Benchmark in CI + approximate number in README |
+| Issue                  | Approach                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Writable `/nix/store`  | Container overlay provides write access; no chown on store needed                                            |
+| Daemon                 | None - single-user mode                                                                                      |
+| Rootless Podman UIDs   | Sidestepped by single-user mode                                                                              |
+| Build sandbox          | `sandbox = false` by default                                                                                 |
+| Nix version            | nixpkgs-pinned default + `nixPackage` parameter override                                                     |
+| `nix develop` / direnv | `nix develop` works out of the box; direnv documented as `extraPackages` example                             |
+| Store ownership        | `chown -R ./nix` in `fakeRootCommands` (only affects `./nix/var`; `./nix/store` doesn't exist at build time) |
+| Store registration     | `includeNixDB` from nixpkgs' `buildLayeredImage` (upstream `mkDbExtraCommand`)                               |
+| `NIX_PATH`             | Set to `nixpkgs=${pkgs.path}` so `nix-shell -p` works                                                        |
+| Image size             | Benchmark in CI + approximate number in README                                                               |
 
 ## Implementation details
 
@@ -64,6 +65,7 @@ When `withNix` is true:
 ### `README.md`
 
 New "Using Nix Inside Containers" section covering:
+
 - How to enable, example definition
 - `nixPackage` and `nixExperimentalFeatures` overrides
 - direnv as `extraPackages` example
@@ -77,12 +79,12 @@ New `smoke-test-nix` job with image size delta reporting.
 
 ## File change summary
 
-| File | Change |
-|---|---|
-| `lib/mkAgentImage.nix` | New parameters, conditional Nix setup via `includeNixDB`/`nixConf`/`chown`/env vars; `which` added to `defaultBasePackages` |
-| `flake.nix` | `nixTestImage`, `smoke-test-nix`, `smoke-test-nix-install` |
-| `README.md` | New "Using Nix Inside Containers" section |
-| `.github/workflows/ci.yml` | `smoke-test-nix` job + size reporting |
+| File                       | Change                                                                                                                      |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `lib/mkAgentImage.nix`     | New parameters, conditional Nix setup via `includeNixDB`/`nixConf`/`chown`/env vars; `which` added to `defaultBasePackages` |
+| `flake.nix`                | `nixTestImage`, `smoke-test-nix`, `smoke-test-nix-install`                                                                  |
+| `README.md`                | New "Using Nix Inside Containers" section                                                                                   |
+| `.github/workflows/ci.yml` | `smoke-test-nix` job + size reporting                                                                                       |
 
 ## Key discovery during implementation
 

@@ -19,43 +19,43 @@ reproducible and easy to customise.
 
 #### AI Coding Agents
 
-| Image | Agent | Build |
-|-------|-------|-------|
-| `amp` | [Amp](https://ampcode.com/) | `nix build .#amp` |
-| `claude-code` | [Claude Code](https://claude.ai/code) | `nix build .#claude-code` |
-| `cli-proxy-api` | [CLI Proxy API](https://github.com/router-for-me/CLIProxyAPI) | `nix build .#cli-proxy-api` |
-| `code` | [Code](https://github.com/just-every/code/) | `nix build .#code` |
-| `codex` | [Codex CLI](https://github.com/openai/codex) | `nix build .#codex` |
-| `copilot-cli` | [Copilot CLI](https://github.com/github/copilot-cli) | `nix build .#copilot-cli` |
-| `crush` | [Crush](https://github.com/charmbracelet/crush) | `nix build .#crush` |
-| `cursor-agent` | [Cursor Agent](https://cursor.com/) | `nix build .#cursor-agent` |
-| `droid` | [Droid](https://factory.ai) | `nix build .#droid` |
-| `eca` | [ECA](https://github.com/editor-code-assistant/eca) | `nix build .#eca` |
-| `forge` | [Forge](https://github.com/antinomyhq/forge) | `nix build .#forge` |
-| `gemini-cli` | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `nix build .#gemini-cli` |
-| `goose-cli` | [Goose](https://github.com/block/goose) | `nix build .#goose-cli` |
-| `iflow-cli` | [iFlow CLI](https://github.com/iflow-ai/iflow-cli) | `nix build .#iflow-cli` |
-| `jules` | [Jules](https://jules.google) | `nix build .#jules` |
-| `kilocode-cli` | [Kilocode CLI](https://kilocode.ai/cli) | `nix build .#kilocode-cli` |
-| `letta-code` | [Letta Code](https://github.com/letta-ai/letta-code) | `nix build .#letta-code` |
-| `mistral-vibe` | [Mistral Vibe](https://github.com/mistralai/mistral-vibe) | `nix build .#mistral-vibe` |
-| `nanocoder` | [Nanocoder](https://github.com/Mote-Software/nanocoder) | `nix build .#nanocoder` |
+| Image            | Agent                                                             | Build                        |
+| ---------------- | ----------------------------------------------------------------- | ---------------------------- |
+| `amp`            | [Amp](https://ampcode.com/)                                       | `nix build .#amp`            |
+| `claude-code`    | [Claude Code](https://claude.ai/code)                             | `nix build .#claude-code`    |
+| `cli-proxy-api`  | [CLI Proxy API](https://github.com/router-for-me/CLIProxyAPI)     | `nix build .#cli-proxy-api`  |
+| `code`           | [Code](https://github.com/just-every/code/)                       | `nix build .#code`           |
+| `codex`          | [Codex CLI](https://github.com/openai/codex)                      | `nix build .#codex`          |
+| `copilot-cli`    | [Copilot CLI](https://github.com/github/copilot-cli)              | `nix build .#copilot-cli`    |
+| `crush`          | [Crush](https://github.com/charmbracelet/crush)                   | `nix build .#crush`          |
+| `cursor-agent`   | [Cursor Agent](https://cursor.com/)                               | `nix build .#cursor-agent`   |
+| `droid`          | [Droid](https://factory.ai)                                       | `nix build .#droid`          |
+| `eca`            | [ECA](https://github.com/editor-code-assistant/eca)               | `nix build .#eca`            |
+| `forge`          | [Forge](https://github.com/antinomyhq/forge)                      | `nix build .#forge`          |
+| `gemini-cli`     | [Gemini CLI](https://github.com/google-gemini/gemini-cli)         | `nix build .#gemini-cli`     |
+| `goose-cli`      | [Goose](https://github.com/block/goose)                           | `nix build .#goose-cli`      |
+| `iflow-cli`      | [iFlow CLI](https://github.com/iflow-ai/iflow-cli)                | `nix build .#iflow-cli`      |
+| `jules`          | [Jules](https://jules.google)                                     | `nix build .#jules`          |
+| `kilocode-cli`   | [Kilocode CLI](https://kilocode.ai/cli)                           | `nix build .#kilocode-cli`   |
+| `letta-code`     | [Letta Code](https://github.com/letta-ai/letta-code)              | `nix build .#letta-code`     |
+| `mistral-vibe`   | [Mistral Vibe](https://github.com/mistralai/mistral-vibe)         | `nix build .#mistral-vibe`   |
+| `nanocoder`      | [Nanocoder](https://github.com/Mote-Software/nanocoder)           | `nix build .#nanocoder`      |
 | `oh-my-opencode` | [Oh My OpenCode](https://github.com/code-yeongyu/oh-my-openagent) | `nix build .#oh-my-opencode` |
-| `omp` | [OMP](https://github.com/can1357/oh-my-pi) | `nix build .#omp` |
-| `opencode` | [OpenCode](https://github.com/anomalyco/opencode) | `nix build .#opencode` |
-| `pi` | [Pi](https://github.com/badlogic/pi-mono) | `nix build .#pi` |
-| `qoder-cli` | [Qoder CLI](https://qoder.com) | `nix build .#qoder-cli` |
-| `qwen-code` | [Qwen Code](https://github.com/QwenLM/qwen-code) | `nix build .#qwen-code` |
+| `omp`            | [OMP](https://github.com/can1357/oh-my-pi)                        | `nix build .#omp`            |
+| `opencode`       | [OpenCode](https://github.com/anomalyco/opencode)                 | `nix build .#opencode`       |
+| `pi`             | [Pi](https://github.com/badlogic/pi-mono)                         | `nix build .#pi`             |
+| `qoder-cli`      | [Qoder CLI](https://qoder.com)                                    | `nix build .#qoder-cli`      |
+| `qwen-code`      | [Qwen Code](https://github.com/QwenLM/qwen-code)                  | `nix build .#qwen-code`      |
 
 #### AI Assistants
 
-| Image | Agent | Build |
-|-------|-------|-------|
+| Image          | Agent                                                  | Build                      |
+| -------------- | ------------------------------------------------------ | -------------------------- |
 | `hermes-agent` | [Hermes Agent](https://hermes-agent.nousresearch.com/) | `nix build .#hermes-agent` |
-| `localgpt` | [LocalGPT](https://github.com/localgpt-app/localgpt) | `nix build .#localgpt` |
-| `openclaw` | [OpenClaw](https://openclaw.ai) | `nix build .#openclaw` |
-| `picoclaw` | [PicoClaw](https://picoclaw.io) | `nix build .#picoclaw` |
-| `zeroclaw` | [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw) | `nix build .#zeroclaw` |
+| `localgpt`     | [LocalGPT](https://github.com/localgpt-app/localgpt)   | `nix build .#localgpt`     |
+| `openclaw`     | [OpenClaw](https://openclaw.ai)                        | `nix build .#openclaw`     |
+| `picoclaw`     | [PicoClaw](https://picoclaw.io)                        | `nix build .#picoclaw`     |
+| `zeroclaw`     | [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw)  | `nix build .#zeroclaw`     |
 
 Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, which, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). By default, containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory. Both the user and working directory can be customised (see [Custom Images](#custom-images)).
 
@@ -105,6 +105,7 @@ podman run --rm --entrypoint sh localhost/agent-images/<agent>:latest \
 ```
 
 Expected output:
+
 ```
 agent
 /home/agent
@@ -215,9 +216,7 @@ You also need a container trust policy. Create `~/.config/containers/policy.json
 
 ```json
 {
-  "default": [
-    { "type": "insecureAcceptAnything" }
-  ]
+  "default": [{ "type": "insecureAcceptAnything" }]
 }
 ```
 
@@ -381,6 +380,21 @@ nix run .#test-nix-install                # runtime install + nix develop (requi
 nix run .#test-nix-custom                 # custom user/uid, experimental features, extraEnv (with Nix)
 nix run .#test-custom                     # custom user/uid/workingDir, extraPackages, extraEnv (without Nix)
 nix run .#test                            # run all of the above
+```
+
+### Formatting
+
+```bash
+nix fmt        # format all files (Nix, shell, YAML, Markdown)
+nix fmt -- --ci  # check without modifying (used in CI)
+```
+
+Pre-commit hooks are set up automatically when entering the dev shell (`nix develop`). They run `nix fmt` on staged files before each commit.
+
+The SHA of any bulk formatting commit should be added to [.git-blame-ignore-revs](.git-blame-ignore-revs) and configured locally with:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
 
 ### Linting

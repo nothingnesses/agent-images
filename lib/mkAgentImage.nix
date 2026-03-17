@@ -30,11 +30,14 @@ in
   uid ? 1000,
   workingDir ? "/workspace",
   basePackages ? defaultBasePackages,
-  extraPackages ? [],
-  extraEnv ? {},
+  extraPackages ? [ ],
+  extraEnv ? { },
   withNix ? false,
   nixPackage ? pkgs.nix,
-  nixExperimentalFeatures ? [ "nix-command" "flakes" ],
+  nixExperimentalFeatures ? [
+    "nix-command"
+    "flakes"
+  ],
 }:
 
 let
@@ -43,7 +46,10 @@ let
     experimental-features = ${lib.concatStringsSep " " nixExperimentalFeatures}
   '';
 
-  nixDeps = lib.optionals withNix [ nixPackage nixConf ];
+  nixDeps = lib.optionals withNix [
+    nixPackage
+    nixConf
+  ];
   allPackages = [ agent ] ++ basePackages ++ extraPackages ++ nixDeps;
 
   home = "/home/${user}";
@@ -59,7 +65,7 @@ let
   ];
 in
 pkgs.dockerTools.buildLayeredImage {
-  meta = agent.meta or {};
+  meta = agent.meta or { };
   inherit name tag;
   contents = allPackages;
   includeNixDB = withNix;
@@ -79,7 +85,8 @@ pkgs.dockerTools.buildLayeredImage {
     NSS
     chmod 1777 ./tmp
     chown ${uidStr}:${uidStr} .${home} .${workingDir}
-  '' + nixFakeRootCommands;
+  ''
+  + nixFakeRootCommands;
 
   config = {
     User = user;
@@ -90,7 +97,8 @@ pkgs.dockerTools.buildLayeredImage {
       "USER=${user}"
       "PATH=${lib.makeBinPath allPackages}"
       "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-    ] ++ nixEnvVars
-      ++ (lib.mapAttrsToList (k: v: "${k}=${v}") extraEnv);
+    ]
+    ++ nixEnvVars
+    ++ (lib.mapAttrsToList (k: v: "${k}=${v}") extraEnv);
   };
 }

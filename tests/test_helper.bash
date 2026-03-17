@@ -15,11 +15,12 @@ build_and_load() {
   local attr="$1"
   nix build ".#${attr}"
   # shellcheck disable=SC2154 # RUNTIME is set by the caller
-  "${RUNTIME}" load < result
+  "${RUNTIME}" load <result
 }
 
 run_in() {
-  local image="$1"; shift
+  local image="$1"
+  shift
   # shellcheck disable=SC2154 # RUNTIME is set by the caller
   "${RUNTIME}" run --rm --entrypoint sh "${image}" -c "$*"
 }

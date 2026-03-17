@@ -14,6 +14,14 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix flake show
 
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix fmt -- --ci
+
   shellcheck:
     runs-on: ubuntu-latest
     steps:

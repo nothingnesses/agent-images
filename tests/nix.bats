@@ -37,13 +37,13 @@ setup() {
 @test "nix.conf has sandbox disabled" {
   run run_in "${IMAGE}" 'cat /etc/nix/nix.conf'
   [ "${status}" -eq 0 ]
-  [[ "${output}" == *"sandbox = false"* ]]
+  [[ ${output} == *"sandbox = false"* ]]
 }
 
 @test "nix.conf has expected experimental features" {
   run run_in "${IMAGE}" 'cat /etc/nix/nix.conf'
   [ "${status}" -eq 0 ]
-  [[ "${output}" == *"experimental-features = nix-command flakes"* ]]
+  [[ ${output} == *"experimental-features = nix-command flakes"* ]]
 }
 
 @test "NIX_CONF_DIR is set correctly" {
