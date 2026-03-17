@@ -17,6 +17,7 @@ let
     jq
     gnutar
     gzip
+    which
   ];
 in
 
@@ -31,33 +32,54 @@ in
   basePackages ? defaultBasePackages,
   extraPackages ? [],
   extraEnv ? {},
+  withNix ? false,
+  nixPackage ? pkgs.nix,
+  nixExperimentalFeatures ? [ "nix-command" "flakes" ],
 }:
 
 let
-  allPackages = [ agent ] ++ basePackages ++ extraPackages;
+  nixConf = pkgs.writeTextDir "etc/nix/nix.conf" ''
+    sandbox = false
+    experimental-features = ${lib.concatStringsSep " " nixExperimentalFeatures}
+  '';
+
+  nixDeps = lib.optionals withNix [ nixPackage nixConf ];
+  allPackages = [ agent ] ++ basePackages ++ extraPackages ++ nixDeps;
+
   home = "/home/${user}";
+  uidStr = toString uid;
+
+  nixFakeRootCommands = lib.optionalString withNix ''
+    chown -R ${uidStr}:${uidStr} ./nix
+  '';
+
+  nixEnvVars = lib.optionals withNix [
+    "NIX_CONF_DIR=/etc/nix"
+    "NIX_PATH=nixpkgs=${pkgs.path}"
+  ];
 in
 pkgs.dockerTools.buildLayeredImage {
   meta = agent.meta or {};
   inherit name tag;
   contents = allPackages;
+  includeNixDB = withNix;
 
   fakeRootCommands = ''
     mkdir -p ./etc .${home} ./tmp .${workingDir}
     cat > ./etc/passwd <<'PASSWD'
     root:x:0:0:root:/root:/bin/bash
-    ${user}:x:${toString uid}:${toString uid}:${user}:${home}:/bin/bash
+    ${user}:x:${uidStr}:${uidStr}:${user}:${home}:/bin/bash
     PASSWD
     cat > ./etc/group <<'GROUP'
     root:x:0:
-    ${user}:x:${toString uid}:
+    ${user}:x:${uidStr}:
     GROUP
     cat > ./etc/nsswitch.conf <<'NSS'
     hosts: files dns
     NSS
     chmod 1777 ./tmp
-    chown ${toString uid}:${toString uid} .${home} .${workingDir}
-  '';
+    chown ${uidStr}:${uidStr} .${home} .${workingDir}
+  '' + nixFakeRootCommands;
 
   config = {
     User = user;
@@ -68,6 +90,7 @@ pkgs.dockerTools.buildLayeredImage {
       "USER=${user}"
       "PATH=${lib.makeBinPath allPackages}"
       "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-    ] ++ (lib.mapAttrsToList (k: v: "${k}=${v}") extraEnv);
+    ] ++ nixEnvVars
+      ++ (lib.mapAttrsToList (k: v: "${k}=${v}") extraEnv);
   };
 }

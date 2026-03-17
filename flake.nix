@@ -73,9 +73,17 @@
           picoclaw = {};
           zeroclaw = {};
         };
+
+        # Test image for withNix smoke tests (not exported as a package)
+        nixTestImage = mkAgentImage {
+          name = "agent-images/nix-test";
+          agent = agents.opencode;
+          entrypoint = [ agents.opencode.meta.mainProgram ];
+          withNix = true;
+        };
       in
       {
-        packages = lib.mapAttrs (name: cfg:
+        packages = (lib.mapAttrs (name: cfg:
           let agent = agents.${cfg.agentPkg or name};
           in mkAgentImage {
             name = "agent-images/${name}";
@@ -84,7 +92,9 @@
             extraPackages = cfg.extraPackages or [];
             extraEnv = cfg.extraEnv or {};
           }
-        ) agentConfigs;
+        ) agentConfigs) // {
+          nix-test-image = nixTestImage;
+        };
 
         devShells.default = pkgs.mkShell {
           packages = [ ab ];
@@ -133,6 +143,92 @@
             else
               exit 1
             fi
+          '';
+        in {
+          type = "app";
+          program = "${script}";
+        };
+
+        apps.smoke-test-nix = let
+          script = pkgs.writeShellScript "smoke-test-nix" ''
+            set -euo pipefail
+
+            image="localhost/agent-images/nix-test:latest"
+
+            if command -v podman &>/dev/null; then
+              runtime=podman
+            elif command -v docker &>/dev/null; then
+              runtime=docker
+            else
+              echo "ERROR: neither podman nor docker found"
+              exit 1
+            fi
+
+            echo "==> Building nix-test image"
+            nix build ".#nix-test-image"
+
+            echo "==> Loading image ($runtime)"
+            $runtime load < result
+
+            echo "==> Verifying nix is available"
+            $runtime run --rm --entrypoint sh "$image" -c 'nix --version'
+
+            echo "==> Verifying store DB is populated"
+            count=$($runtime run --rm --entrypoint sh "$image" -c 'nix path-info --all | wc -l')
+            echo "    $count store paths registered"
+            [ "$count" -gt 0 ] || { echo "FAIL: no store paths registered"; exit 1; }
+
+            echo "==> Verifying shallow ownership (store dir writable)"
+            $runtime run --rm --entrypoint sh "$image" -c \
+              'touch /nix/store/.write-test && rm /nix/store/.write-test'
+
+            echo "==> Verifying store path query works"
+            path=$($runtime run --rm --entrypoint sh "$image" -c 'nix path-info --all | head -1')
+            $runtime run --rm --entrypoint sh "$image" -c "nix path-info $path"
+
+            echo "==> All nix checks passed"
+          '';
+        in {
+          type = "app";
+          program = "${script}";
+        };
+
+        apps.smoke-test-nix-install = let
+          script = pkgs.writeShellScript "smoke-test-nix-install" ''
+            set -euo pipefail
+
+            image="localhost/agent-images/nix-test:latest"
+
+            if command -v podman &>/dev/null; then
+              runtime=podman
+            elif command -v docker &>/dev/null; then
+              runtime=docker
+            else
+              echo "ERROR: neither podman nor docker found"
+              exit 1
+            fi
+
+            # Assume image is already loaded (run smoke-test-nix first)
+            echo "==> Testing runtime package installation"
+            $runtime run --rm --entrypoint sh "$image" -c \
+              'nix-shell -p hello --command hello'
+
+            echo "==> Testing nix develop"
+            $runtime run --rm --entrypoint sh "$image" -c '
+              mkdir -p /tmp/test-flake
+              cat > /tmp/test-flake/flake.nix <<FLAKE
+            {
+              inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+              outputs = { nixpkgs, ... }:
+                let pkgs = import nixpkgs { system = "${system}"; };
+                in { devShells.${system}.default = pkgs.mkShell { buildInputs = [ pkgs.hello ]; }; };
+            }
+            FLAKE
+              cd /tmp/test-flake
+              nix develop --command hello
+            '
+
+            echo "==> All nix-install checks passed"
           '';
         in {
           type = "app";

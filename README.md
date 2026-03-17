@@ -57,7 +57,7 @@ reproducible and easy to customise.
 | `picoclaw` | [PicoClaw](https://picoclaw.io) | `nix build .#picoclaw` |
 | `zeroclaw` | [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw) | `nix build .#zeroclaw` |
 
-Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). By default, containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory. Both the user and working directory can be customised (see [Custom Images](#custom-images)).
+Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, which, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). By default, containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory. Both the user and working directory can be customised (see [Custom Images](#custom-images)).
 
 ## Requirements
 
@@ -291,6 +291,98 @@ mkAgentImage {
   uid = 1001;
   workingDir = "/project";
 }
+```
+
+## Using Nix Inside Containers
+
+By default, the Nix CLI is not included in images. Set `withNix = true` to enable Nix workflows inside the container:
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  withNix = true;
+};
+```
+
+This configures single-user Nix with `nix-command` and `flakes` experimental features enabled. Inside the container, you can run:
+
+```bash
+nix --version
+nix develop
+nix build
+nix shell nixpkgs#hello -c hello
+nix-shell -p ripgrep --command "rg --version"
+```
+
+### Overriding the Nix Version
+
+The Nix CLI version defaults to whatever the flake's nixpkgs pins. Pass `nixPackage` to use a different version:
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  withNix = true;
+  nixPackage = my-custom-nix;
+};
+```
+
+### Customising Experimental Features
+
+The default experimental features are `nix-command` and `flakes`. Override with `nixExperimentalFeatures`:
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  withNix = true;
+  nixExperimentalFeatures = [ "nix-command" "flakes" "pipe-operators" ];
+};
+```
+
+### Adding direnv
+
+direnv is not included by default but can be added via `extraPackages`:
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  withNix = true;
+  extraPackages = [ pkgs.direnv pkgs.nix-direnv ];
+};
+```
+
+You will also need to wire up the shell hook. Add an `extraEnv` entry or configure `.bashrc` in the container's home directory to run `eval "$(direnv hook bash)"`.
+
+### Known Limitations
+
+- **No build sandbox**: Nix builds inside the container run with `sandbox = false` because container runtimes typically restrict namespace creation. Builds are not hermetic - a derivation that succeeds in the container may fail in a sandboxed environment. If your container runs with elevated privileges, you can override this by mounting a custom `nix.conf` with `sandbox = relaxed` or `sandbox = true`.
+- **Image size**: Enabling `withNix` adds the Nix CLI and its dependencies to the image. Expect roughly 50-150 MB of additional size depending on the nixpkgs pin.
+
+### Host Store Mount Optimisation
+
+If the host machine has Nix installed, you can bind-mount the host store read-only to avoid duplicating store paths:
+
+```bash
+podman run --rm -it \
+  --mount type=bind,src=/nix/store,dst=/nix/store,ro \
+  -v ./my-project:/workspace \
+  localhost/agent-images/my-agent:latest
+```
+
+This is useful for reducing disk usage but couples the container to the host's Nix installation.
+
+### Smoke Tests
+
+```bash
+nix run .#smoke-test-nix           # basic Nix checks (offline)
+nix run .#smoke-test-nix-install   # runtime install + nix develop (requires network)
 ```
 
 ## License
