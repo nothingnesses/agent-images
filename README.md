@@ -383,6 +383,8 @@ This is useful for reducing disk usage but couples the container to the host's N
 ```bash
 nix run .#smoke-test-nix           # basic Nix checks (offline)
 nix run .#smoke-test-nix-install   # runtime install + nix develop (requires network)
+nix run .#smoke-test-nix-custom    # custom user/uid, experimental features, extraEnv (with Nix)
+nix run .#smoke-test-custom        # custom user/uid/workingDir, extraPackages, extraEnv (without Nix)
 ```
 
 ## License

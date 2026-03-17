@@ -29,6 +29,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix run .#smoke-test-nix
+      - run: nix run .#smoke-test-nix-install
       - name: Report image size delta
         run: |
           nix build .#opencode -o result-base
@@ -39,3 +40,19 @@ jobs:
           echo "Base image: $(( base_size / 1048576 )) MB"
           echo "withNix image: $(( nix_size / 1048576 )) MB"
           echo "Delta: $(( delta / 1048576 )) MB"
+
+  smoke-test-custom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix run .#smoke-test-custom
+
+  smoke-test-nix-custom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix run .#smoke-test-nix-custom
