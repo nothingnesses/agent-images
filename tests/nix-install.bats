@@ -1,12 +1,12 @@
 setup_file() {
-  load test_helper
+  load helpers
   RUNTIME=$(detect_runtime)
   export RUNTIME
   build_and_load "nix-test-image"
 }
 
 setup() {
-  load test_helper
+  load helpers
   RUNTIME=$(detect_runtime)
   export RUNTIME
   IMAGE="localhost/agent-images/nix-test:latest"
@@ -15,7 +15,7 @@ setup() {
 
 @test "runtime package installation with nix-shell" {
   run run_in "${IMAGE}" 'nix-shell -p hello --command hello'
-  [ "${status}" -eq 0 ]
+  [[ ${status} -eq 0 ]]
 }
 
 @test "nix develop works with a flake" {
@@ -32,5 +32,5 @@ FLAKE
     cd /tmp/test-flake
     nix develop --command hello
   "
-  [ "${status}" -eq 0 ]
+  [[ ${status} -eq 0 ]]
 }

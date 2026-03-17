@@ -26,13 +26,13 @@
 
   outputs =
     {
-      self,
       nixpkgs,
       llm-agents,
       flake-utils,
       agent-box,
       treefmt-nix,
       git-hooks,
+      ...
     }:
     {
       lib.mkAgentImage =
@@ -170,9 +170,19 @@
 
         pre-commit-check = git-hooks.lib.${system}.run {
           src = ./.;
-          hooks.treefmt = {
-            enable = true;
-            package = treefmtEval.config.build.wrapper;
+          hooks = {
+            treefmt = {
+              enable = true;
+              package = treefmtEval.config.build.wrapper;
+            };
+            deadnix = {
+              enable = true;
+              package = pkgs.deadnix;
+            };
+            actionlint = {
+              enable = true;
+              package = pkgs.actionlint;
+            };
           };
         };
 
@@ -222,7 +232,9 @@
         devShells.default = pkgs.mkShell {
           packages = [
             ab
+            pkgs.actionlint
             pkgs.bats
+            pkgs.deadnix
             pkgs.shellcheck
           ];
           inherit (pre-commit-check) shellHook;
@@ -248,7 +260,28 @@
           shellcheck = {
             type = "app";
             program = "${pkgs.writeShellScript "shellcheck" ''
-              ${pkgs.shellcheck}/bin/shellcheck --enable=all --exclude=SC2292 ${testsDir}/*.bats ${testsDir}/*.bash
+              ${pkgs.shellcheck}/bin/shellcheck --enable=all ${testsDir}/*.bats ${testsDir}/*.bash
+            ''}";
+          };
+          deadnix = {
+            type = "app";
+            program = "${pkgs.writeShellScript "deadnix" ''
+              ${pkgs.deadnix}/bin/deadnix --fail .
+            ''}";
+          };
+          actionlint = {
+            type = "app";
+            program = "${pkgs.writeShellScript "actionlint" ''
+              ${pkgs.actionlint}/bin/actionlint
+            ''}";
+          };
+          lint = {
+            type = "app";
+            program = "${pkgs.writeShellScript "lint" ''
+              set -euo pipefail
+              ${pkgs.shellcheck}/bin/shellcheck --enable=all ${testsDir}/*.bats ${testsDir}/*.bash
+              ${pkgs.deadnix}/bin/deadnix --fail .
+              ${pkgs.actionlint}/bin/actionlint
             ''}";
           };
         };

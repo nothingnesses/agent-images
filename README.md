@@ -400,7 +400,10 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 ### Linting
 
 ```bash
+nix run .#lint        # run all linters
 nix run .#shellcheck  # run shellcheck across all test files
+nix run .#deadnix     # find unused bindings in Nix files
+nix run .#actionlint  # validate GitHub Actions workflow files
 ```
 
 ## License
