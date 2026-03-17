@@ -1,11 +1,11 @@
 # agent-images
 
-OCI container images for AI coding agents, built reproducibly with Nix.
+Sandboxed OCI container images for AI coding agents, built reproducibly with Nix.
 
 Consumes agent packages from [llm-agents.nix](https://github.com/numtide/llm-agents.nix) and produces images usable with [agent-box](https://github.com/0xferrous/agent-box) or standalone Podman/Docker.
 
 ```
-llm-agents.nix (packages)  →  agent-images (images)  →  agent-box (orchestration)
+llm-agents.nix (packages)  ->  agent-images (images)  ->  agent-box (orchestration)
 ```
 
 ## Why

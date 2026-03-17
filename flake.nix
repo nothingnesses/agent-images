@@ -1,5 +1,5 @@
 {
-  description = "OCI container images for AI coding agents";
+  description = "Sandboxed OCI container images for AI coding agents";
 
   nixConfig = {
     extra-substituters = [ "https://cache.numtide.com" ];
