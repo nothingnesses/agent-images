@@ -188,6 +188,112 @@ Provide a README example showing how to add direnv.
 
 **Decision**: A as the baseline. C for direnv - document it as an example in the custom images section rather than bundling it.
 
+### 7. Store ownership at build time
+
+`buildLayeredImage` splits store paths across multiple layers for caching, then runs `fakeRootCommands` to produce a final customisation layer. If `chown -R` is used on `/nix` in `fakeRootCommands`, every store path's metadata must be recorded in the customisation layer, potentially inflating it by hundreds of MB.
+
+#### A) Full `chown -R ./nix` (simple but expensive)
+
+Grant the agent user recursive ownership of the entire `/nix` tree.
+
+- **Pro**: Guaranteed correct for single-user Nix - no ownership ambiguity
+- **Con**: Every store path's metadata changes, inflating the customisation layer. Build time scales with store size.
+
+#### B) Shallow ownership (recommended)
+
+Only `chown` the `/nix/store` directory itself (not its contents) and `/nix/var` recursively:
+
+```bash
+chown ${uid}:${uid} ./nix ./nix/store
+chown -R ${uid}:${uid} ./nix/var
+```
+
+Existing store paths are immutable - the agent only needs write access to `/nix/store` (to create new entries) and `/nix/var` (for the DB). Read access to existing paths is sufficient.
+
+- **Pro**: Minimal layer inflation; fast
+- **Con**: Nix may check ownership of individual store paths during GC or verification. Assumption needs testing.
+
+#### C) Switch to `buildImage` (single layer) when `withNix` is true
+
+Use `buildImage` instead of `buildLayeredImage` so `chown -R` is baked into one layer with no duplication.
+
+- **Pro**: No layer inflation concern
+- **Con**: Loses layer caching - every rebuild re-transfers the entire image
+
+#### D) User-writable alternative store location
+
+Set `NIX_STORE_DIR` to a path under the agent user's home (e.g. `/home/agent/.nix/store`).
+
+- **Pro**: No chown needed at all
+- **Con**: Non-standard path; derivations from registries reference `/nix/store`; breaks `nix develop` and flake workflows
+
+**Decision**: B. Shallow ownership is the best default - minimal overhead, correct for the common case. If testing reveals that Nix rejects root-owned paths in single-user mode, fall back to A.
+
+---
+
+### 8. Store registration in `fakeRootCommands`
+
+`fakeRootCommands` runs in a temporary directory where `.` represents the container's filesystem root. `closureInfo` registration files contain absolute `/nix/store/...` paths. `nix-store --load-db` needs to reconcile these two realities.
+
+#### A) Set `NIX_STATE_DIR=$PWD/nix/var/nix`
+
+Redirect the Nix state directory so the DB is written to `./nix/var/nix/db/db.sqlite`. The host's real `/nix/store` contains all referenced paths (they're build inputs), so validation passes.
+
+- **Pro**: One environment variable, one command
+- **Con**: `nix-store` may try to acquire locks on or interact with the host's Nix state. Needs testing.
+
+#### B) Generate the SQLite DB as a separate derivation
+
+Write a derivation that takes `closureInfo` output and produces a `db.sqlite`. Include it in the image via `contents` or copy it in `fakeRootCommands`.
+
+- **Pro**: Clean - no interaction with host Nix state during image build. Deterministic and cacheable.
+- **Con**: More complex build logic; must replicate the Nix DB schema or invoke `nix-store --load-db` inside the derivation's own sandbox (which has proper `/nix` access).
+
+#### C) First-run entrypoint wrapper
+
+Skip registration at build time. Wrap the entrypoint with a script that runs `nix-store --load-db` on first start (guarded by a flag file).
+
+- **Pro**: Avoids the `fakeRootCommands` path issue entirely
+- **Con**: Complicates the entrypoint; slower first container start; conflicts with how orchestrators (agent-box) invoke images
+
+#### D) Register inside a derivation, include the result (recommended)
+
+Build a derivation whose build phase runs `nix-store --init` + `--load-db` in a clean environment, outputting the `/nix/var/nix` tree. Include that derivation in the image's `contents`.
+
+- **Pro**: Correct Nix environment during registration (proper `/nix/store` access). No interaction with host state. Cacheable.
+- **Con**: Needs care to ensure the DB references match the actual store paths in the final image. Slightly unusual pattern.
+
+**Decision**: Try A first for simplicity. If `nix-store` interferes with host state or fails under `fakeRootCommands`, use D.
+
+---
+
+### 9. Image size impact
+
+The Nix CLI and its runtime dependencies add to the image size. Users should be able to make an informed choice about enabling `withNix`.
+
+#### A) Benchmark and document a static number
+
+Build with and without `withNix`, note the delta in the README.
+
+- **Pro**: Simple; gives users a quick reference
+- **Con**: Goes stale with each nixpkgs bump
+
+#### B) Add size reporting to CI
+
+CI job builds both variants and prints the delta.
+
+- **Pro**: Always current; catches unexpected bloat from dependency changes
+- **Con**: Extra CI time and complexity
+
+#### C) Both (recommended)
+
+CI tracks the actual number. README gives a ballpark (e.g. "~X MB overhead, varies by nixpkgs pin").
+
+- **Pro**: Best of both - quick reference in docs, accurate number in CI
+- **Con**: Minor maintenance to keep the README number reasonably current
+
+**Decision**: C. Document an approximate number in the README and add CI size reporting to keep it honest.
+
 ## Summary
 
 The recurring theme is that **single-user Nix with `sandbox = false`** resolves the majority of issues simultaneously (daemon, rootless Podman, sandbox, UID mapping). The main engineering work is in properly setting up the store, DB, and permissions at image build time. The rest is mostly configuration and documentation.
