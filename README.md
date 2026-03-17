@@ -59,6 +59,13 @@ reproducible and easy to customise.
 
 Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). By default, containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory. Both the user and working directory can be customised (see [Custom Images](#custom-images)).
 
+## Requirements
+
+- [Nix](https://nixos.org/) with [flakes enabled](https://wiki.nixos.org/wiki/Flakes)
+- [Podman](https://podman.io/) or [Docker](https://www.docker.com/) for loading and running images
+
+All other dependencies (including agent packages from [llm-agents.nix](https://github.com/numtide/llm-agents.nix)) are resolved automatically by the Nix flake. NixOS users should also follow the [rootless Podman setup](#nixos-rootless-podman-setup) steps below.
+
 ## Quick Start
 
 ```bash
@@ -179,11 +186,11 @@ To verify that worktree mode hides gitignored files:
 # Replace <agent> with any image name from the table above
 nix build .#<agent>
 
-# Local mode — agent CAN see result
+# Local mode - agent CAN see result
 ab spawn --local --entrypoint ls -c="-la" -c="result"
 # Output: result -> /nix/store/...
 
-# Worktree mode — agent CANNOT see result
+# Worktree mode - agent CANNOT see result
 ab new my-repo -s sandbox-test --git
 ab spawn -s sandbox-test --git --entrypoint ls -c="result"
 # Output: ls: cannot access 'result': No such file or directory
