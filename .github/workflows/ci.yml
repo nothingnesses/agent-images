@@ -46,6 +46,16 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix run .#actionlint
 
+  eval-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix flake show
+      - run: nix fmt -- --ci
+      - run: nix flake check
+
   test-default:
     runs-on: ubuntu-latest
     steps:
