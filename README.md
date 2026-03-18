@@ -66,6 +66,16 @@ Each image includes a default set of base packages: git, coreutils, bash, ripgre
 
 All other dependencies (including agent packages from [llm-agents.nix](https://github.com/numtide/llm-agents.nix)) are resolved automatically by the Nix flake. NixOS users should also follow the [rootless Podman setup](#nixos-rootless-podman-setup) steps below.
 
+**macOS:** Images are Linux-only. On macOS, specify the target system explicitly and ensure you have a [Linux remote builder](https://nix.dev/manual/nix/latest/advanced-topics/distributed-builds) configured (e.g. via Docker Desktop or nix-darwin's `linux-builder`):
+
+```bash
+nix build .#packages.x86_64-linux.<agent>
+# or for ARM:
+nix build .#packages.aarch64-linux.<agent>
+```
+
+Dev tooling (`nix fmt`, `nix develop`, `nix flake check`) works natively on macOS.
+
 ## Quick Start
 
 ```bash
@@ -371,6 +381,8 @@ This is useful for reducing disk usage but couples the container to the host's N
 ## Development
 
 ### Tests
+
+Tests are Linux-only (they build and run container images). On macOS, specify the system explicitly, e.g. `nix run .#apps.x86_64-linux.test`.
 
 ```bash
 nix run .#test-default                    # default image (opencode)
