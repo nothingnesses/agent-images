@@ -32,7 +32,10 @@
       ...
     }:
     let
-      eachSystem = nixpkgs.lib.genAttrs (import systems);
+      allSystems = import systems;
+      linuxSystems = builtins.filter (s: builtins.match ".*-linux" s != null) allSystems;
+      eachSystem = nixpkgs.lib.genAttrs allSystems;
+      eachLinuxSystem = nixpkgs.lib.genAttrs linuxSystems;
 
       perSystem =
         system:
@@ -276,10 +279,10 @@
         }:
         import ./lib/mkAgentImage.nix { inherit pkgs lib; };
 
-      packages = eachSystem (system: (perSystem system).packages);
+      packages = eachLinuxSystem (system: (perSystem system).packages);
       formatter = eachSystem (system: (perSystem system).formatter);
       checks = eachSystem (system: (perSystem system).checks);
       devShells = eachSystem (system: (perSystem system).devShells);
-      apps = eachSystem (system: (perSystem system).apps);
+      apps = eachLinuxSystem (system: (perSystem system).apps);
     };
 }
