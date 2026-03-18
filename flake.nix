@@ -10,10 +10,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     llm-agents.url = "github:numtide/llm-agents.nix";
     flake-utils.url = "github:numtide/flake-utils";
-    agent-box = {
-      url = "github:0xferrous/agent-box";
-      flake = false;
-    };
+    agent-box.url = "github:0xferrous/agent-box";
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -54,20 +51,7 @@
 
         mkAgentImage = import ./lib/mkAgentImage.nix { inherit pkgs lib; };
 
-        ab = pkgs.rustPlatform.buildRustPackage {
-          pname = "ab";
-          version = "0.1.0";
-          src = agent-box;
-          cargoLock.lockFile = "${agent-box}/Cargo.lock";
-          cargoBuildFlags = [
-            "-p"
-            "ab"
-          ];
-          cargoTestFlags = [
-            "-p"
-            "ab"
-          ];
-        };
+        ab = agent-box.packages.${system}.default;
 
         agentConfigs = {
           # AI Coding Agents
