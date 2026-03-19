@@ -280,7 +280,7 @@ mkAgentImage {
 
 ### Customising User and Working Directory
 
-By default, containers run as user `agent` (uid 1000) with `/workspace` as the working directory. Override these with `user`, `uid`, and `workingDir`:
+By default, containers run as user `agent` (uid/gid 1000) with `/workspace` as the working directory. Override these with `user`, `uid`, `gid`, and `workingDir`:
 
 ```nix
 mkAgentImage {
@@ -289,9 +289,12 @@ mkAgentImage {
   entrypoint = [ "my-agent" ];
   user = "dev";
   uid = 1001;
+  gid = 100;  # defaults to uid if omitted
   workingDir = "/project";
 }
 ```
+
+Setting `gid` independently from `uid` is useful for rootless Podman users whose host group (e.g. `users`, gid 100) differs from their uid. Without it, files created inside the container may have a gid that maps to an unexpected value on the host.
 
 ## Using Nix Inside Containers
 
@@ -397,8 +400,8 @@ nix run .#test-default                    # default image (opencode)
 AGENT=codex nix run .#test-default        # or specify any agent
 nix run .#test-nix                        # basic Nix checks (offline)
 nix run .#test-nix-install                # runtime install + nix develop (requires network)
-nix run .#test-nix-custom                 # custom user/uid, experimental features, extraEnv (with Nix)
-nix run .#test-custom                     # custom user/uid/workingDir, extraPackages, extraEnv (without Nix)
+nix run .#test-nix-custom                 # custom user/uid/gid, experimental features, extraEnv (with Nix)
+nix run .#test-custom                     # custom user/uid/gid/workingDir, extraPackages, extraEnv (without Nix)
 nix run .#test-nix-userns                 # Nix with --userns=keep-id (Podman only, skipped under Docker)
 nix run .#test                            # run all of the above
 ```
