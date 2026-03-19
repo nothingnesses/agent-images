@@ -364,6 +364,14 @@ You will also need to wire up the shell hook. Add an `extraEnv` entry or configu
 
 - **No build sandbox**: Nix builds inside the container run with `sandbox = false` because container runtimes typically restrict namespace creation. Builds are not hermetic - a derivation that succeeds in the container may fail in a sandboxed environment. If your container runs with elevated privileges, you can override this by mounting a custom `nix.conf` with `sandbox = relaxed` or `sandbox = true`.
 - **Image size**: Enabling `withNix` adds the Nix CLI and its dependencies to the image. Expect roughly 50-150 MB of additional size depending on the nixpkgs pin.
+- **Rootless Podman UID remapping**: Rootless Podman remaps UIDs by default, which can cause permission errors when writing to `/nix/store`, `/tmp`, or `$HOME` inside the container. If you encounter these errors, pass `--userns=keep-id` to map your host UID directly into the container. Docker and rootful Podman do not have this issue.
+  ```bash
+  podman run --rm -it \
+    --userns=keep-id \
+    -v ./my-project:/workspace \
+    -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+    localhost/agent-images/claude-code:latest
+  ```
 
 ### Host Store Mount Optimisation
 
@@ -391,6 +399,7 @@ nix run .#test-nix                        # basic Nix checks (offline)
 nix run .#test-nix-install                # runtime install + nix develop (requires network)
 nix run .#test-nix-custom                 # custom user/uid, experimental features, extraEnv (with Nix)
 nix run .#test-custom                     # custom user/uid/workingDir, extraPackages, extraEnv (without Nix)
+nix run .#test-nix-userns                 # Nix with --userns=keep-id (Podman only, skipped under Docker)
 nix run .#test                            # run all of the above
 ```
 

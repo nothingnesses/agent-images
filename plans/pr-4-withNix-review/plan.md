@@ -133,9 +133,9 @@ After implementing and verifying:
 
 ## Files changed
 
-| File | Change |
-|------|--------|
-| `lib/mkAgentImage.nix` | Add `auto-optimise-store = false` to `nix.conf`; add `mkdir -p ./nix/store` before `chown` |
-| `tests/nix.bats` | Add store ownership test |
-| `tests/nix-custom.bats` | Add store ownership test for custom user |
-| `README.md` | Document rootless Podman `--userns=keep-id` usage |
+| File                    | Change                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------ |
+| `lib/mkAgentImage.nix`  | Add `auto-optimise-store = false` to `nix.conf`; add `mkdir -p ./nix/store` before `chown` |
+| `tests/nix.bats`        | Add store ownership test                                                                   |
+| `tests/nix-custom.bats` | Add store ownership test for custom user                                                   |
+| `README.md`             | Document rootless Podman `--userns=keep-id` usage                                          |

@@ -19,8 +19,18 @@ build_and_load() {
 }
 
 run_in() {
+  # Usage: run_in [FLAGS... --] IMAGE COMMAND
+  local -a flags=()
+  while [[ $# -gt 0 && $1 == -* ]]; do
+    if [[ $1 == "--" ]]; then
+      shift
+      break
+    fi
+    flags+=("$1")
+    shift
+  done
   local image="$1"
   shift
   # shellcheck disable=SC2154 # RUNTIME is set by the caller
-  "${RUNTIME}" run --rm --entrypoint sh "${image}" -c "$*"
+  "${RUNTIME}" run --rm "${flags[@]}" --entrypoint sh "${image}" -c "$*"
 }

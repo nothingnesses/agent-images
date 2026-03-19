@@ -232,6 +232,7 @@
               vars.SYSTEM = system;
             };
             test-nix-custom = mkTest { name = "nix-custom"; };
+            test-nix-userns = mkTest { name = "nix-userns"; };
             test-custom = mkTest { name = "custom"; };
             test = {
               type = "app";
