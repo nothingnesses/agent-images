@@ -228,6 +228,21 @@ Set `TMPDIR=/home/${user}/tmp`, add `store = /home/${user}/.nix/store` to `nix.c
 
 ---
 
+## Reproduction results
+
+Attempted to reproduce 0xferrous's permission errors across four scenarios:
+
+1. `nix build .#nix-test-image` (flake) + `podman run` (rootless).
+2. Same with `--userns=keep-id`.
+3. Same with `-v ./:/workspace`.
+4. `nix build -f . pi --arg withNix true --impure` (0xferrous's `default.nix`) + `podman run`.
+
+**All four passed without errors.** `/nix/store`, `/tmp`, and `$HOME` were writable in every case, and `nix shell` / `nix-shell` both succeeded. The permission errors could not be reproduced locally.
+
+This confirms the issue is specific to 0xferrous's rootless Podman UID mapping configuration, not a bug in the image build. The defensive code changes (Approaches A-C, E for Comment 2) are unnecessary since there is no build-time layer ordering issue.
+
+---
+
 ## Recommendation
 
 ### For Comment 1 (default.nix)
@@ -236,6 +251,16 @@ Set `TMPDIR=/home/${user}/tmp`, add `store = /home/${user}/.nix/store` to `nix.c
 
 ### For Comment 2 (permissions)
 
-**Approach C + D combined**: fix `/nix/store` ownership in the customisation layer, add `auto-optimise-store = false` to `nix.conf`, and document `--userns=keep-id` for rootless Podman users. This keeps the current architecture intact while addressing the concrete failures.
+**Approach D only** (document `--userns=keep-id`). Since the errors could not be reproduced, no code changes are needed. The issue is specific to 0xferrous's Podman configuration. Documentation and a local test suite are sufficient.
 
-**First step** before implementing: reproduce the exact errors to confirm whether the root cause is rootless Podman UID remapping or a build-time layer ordering issue. This determines whether D is necessary or if C alone suffices.
+---
+
+## Outcome
+
+### Comment 1
+
+Chose **Approach C**. Replied to 0xferrous pointing to `lib.mkAgentImage` and the Custom Images section in the README, with a working flake example for their use case.
+
+### Comment 2
+
+Chose **Approach D**. Added `--userns=keep-id` documentation to the README under Known Limitations. Added a Podman-only local test suite (`nix-userns.bats`) that verifies `/nix/store`, `/tmp`, and `$HOME` writability under `--userns=keep-id`. Extended the `run_in` test helper to accept optional runtime flags. Replied to 0xferrous with reproduction results and troubleshooting steps, asked them to report back.
