@@ -28,6 +28,7 @@ in
   entrypoint,
   user ? "agent",
   uid ? 1000,
+  gid ? uid,
   workingDir ? "/workspace",
   basePackages ? defaultBasePackages,
   extraPackages ? [ ],
@@ -54,9 +55,10 @@ let
 
   home = "/home/${user}";
   uidStr = toString uid;
+  gidStr = toString gid;
 
   nixFakeRootCommands = lib.optionalString withNix ''
-    chown -R ${uidStr}:${uidStr} ./nix
+    chown -R ${uidStr}:${gidStr} ./nix
   '';
 
   nixEnvVars = lib.optionals withNix [
@@ -74,17 +76,17 @@ pkgs.dockerTools.buildLayeredImage {
     mkdir -p ./etc .${home} ./tmp .${workingDir}
     cat > ./etc/passwd <<'PASSWD'
     root:x:0:0:root:/root:/bin/bash
-    ${user}:x:${uidStr}:${uidStr}:${user}:${home}:/bin/bash
+    ${user}:x:${uidStr}:${gidStr}:${user}:${home}:/bin/bash
     PASSWD
     cat > ./etc/group <<'GROUP'
     root:x:0:
-    ${user}:x:${uidStr}:
+    ${user}:x:${gidStr}:
     GROUP
     cat > ./etc/nsswitch.conf <<'NSS'
     hosts: files dns
     NSS
     chmod 1777 ./tmp
-    chown ${uidStr}:${uidStr} .${home} .${workingDir}
+    chown ${uidStr}:${gidStr} .${home} .${workingDir}
   ''
   + nixFakeRootCommands;
 

@@ -101,6 +101,7 @@
             withNix = true;
             user = "ci";
             uid = 1001;
+            gid = 100;
             nixExperimentalFeatures = [
               "nix-command"
               "flakes"
@@ -117,6 +118,7 @@
             entrypoint = [ agents.opencode.meta.mainProgram ];
             user = "dev";
             uid = 1002;
+            gid = 100;
             workingDir = "/project";
             extraPackages = [ pkgs.hello ];
             extraEnv = {

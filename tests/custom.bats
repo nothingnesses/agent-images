@@ -24,6 +24,12 @@ setup() {
   [[ ${output} == "1002" ]]
 }
 
+@test "custom gid is 100" {
+  run run_in "${IMAGE}" 'id -g'
+  [[ ${status} -eq 0 ]]
+  [[ ${output} == "100" ]]
+}
+
 @test "HOME is /home/dev" {
   # shellcheck disable=SC2016
   run run_in "${IMAGE}" 'echo $HOME'

@@ -24,6 +24,12 @@ setup() {
   [[ ${output} == "agent" ]]
 }
 
+@test "default gid matches uid" {
+  # shellcheck disable=SC2016
+  run run_in "${IMAGE}" '[ "$(id -g)" = "$(id -u)" ]'
+  [[ ${status} -eq 0 ]]
+}
+
 @test "HOME is /home/agent" {
   # shellcheck disable=SC2016
   run run_in "${IMAGE}" 'echo $HOME'

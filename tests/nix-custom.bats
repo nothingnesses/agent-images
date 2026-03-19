@@ -24,6 +24,12 @@ setup() {
   [[ ${output} == "1001" ]]
 }
 
+@test "custom gid is 100" {
+  run run_in "${IMAGE}" 'id -g'
+  [[ ${status} -eq 0 ]]
+  [[ ${output} == "100" ]]
+}
+
 @test "nix works with custom user" {
   run run_in "${IMAGE}" 'nix --version'
   [[ ${status} -eq 0 ]]
@@ -34,10 +40,10 @@ setup() {
   [[ ${status} -eq 0 ]]
 }
 
-@test "/nix/store is owned by custom uid" {
-  run run_in "${IMAGE}" 'stat -c %u /nix/store'
+@test "/nix/store is owned by custom uid:gid" {
+  run run_in "${IMAGE}" 'stat -c %u:%g /nix/store'
   [[ ${status} -eq 0 ]]
-  [[ ${output} == "1001" ]]
+  [[ ${output} == "1001:100" ]]
 }
 
 @test "nix.conf has pipe-operators" {
