@@ -19,45 +19,45 @@ reproducible and easy to customise.
 
 #### AI Coding Agents
 
-| Image | Agent | Build |
-|-------|-------|-------|
-| `amp` | [Amp](https://ampcode.com/) | `nix build .#amp` |
-| `claude-code` | [Claude Code](https://claude.ai/code) | `nix build .#claude-code` |
-| `cli-proxy-api` | [CLI Proxy API](https://github.com/router-for-me/CLIProxyAPI) | `nix build .#cli-proxy-api` |
-| `code` | [Code](https://github.com/just-every/code/) | `nix build .#code` |
-| `codex` | [Codex CLI](https://github.com/openai/codex) | `nix build .#codex` |
-| `copilot-cli` | [Copilot CLI](https://github.com/github/copilot-cli) | `nix build .#copilot-cli` |
-| `crush` | [Crush](https://github.com/charmbracelet/crush) | `nix build .#crush` |
-| `cursor-agent` | [Cursor Agent](https://cursor.com/) | `nix build .#cursor-agent` |
-| `droid` | [Droid](https://factory.ai) | `nix build .#droid` |
-| `eca` | [ECA](https://github.com/editor-code-assistant/eca) | `nix build .#eca` |
-| `forge` | [Forge](https://github.com/antinomyhq/forge) | `nix build .#forge` |
-| `gemini-cli` | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `nix build .#gemini-cli` |
-| `goose-cli` | [Goose](https://github.com/block/goose) | `nix build .#goose-cli` |
-| `iflow-cli` | [iFlow CLI](https://github.com/iflow-ai/iflow-cli) | `nix build .#iflow-cli` |
-| `jules` | [Jules](https://jules.google) | `nix build .#jules` |
-| `kilocode-cli` | [Kilocode CLI](https://kilocode.ai/cli) | `nix build .#kilocode-cli` |
-| `letta-code` | [Letta Code](https://github.com/letta-ai/letta-code) | `nix build .#letta-code` |
-| `mistral-vibe` | [Mistral Vibe](https://github.com/mistralai/mistral-vibe) | `nix build .#mistral-vibe` |
-| `nanocoder` | [Nanocoder](https://github.com/Mote-Software/nanocoder) | `nix build .#nanocoder` |
+| Image            | Agent                                                             | Build                        |
+| ---------------- | ----------------------------------------------------------------- | ---------------------------- |
+| `amp`            | [Amp](https://ampcode.com/)                                       | `nix build .#amp`            |
+| `claude-code`    | [Claude Code](https://claude.ai/code)                             | `nix build .#claude-code`    |
+| `cli-proxy-api`  | [CLI Proxy API](https://github.com/router-for-me/CLIProxyAPI)     | `nix build .#cli-proxy-api`  |
+| `code`           | [Code](https://github.com/just-every/code/)                       | `nix build .#code`           |
+| `codex`          | [Codex CLI](https://github.com/openai/codex)                      | `nix build .#codex`          |
+| `copilot-cli`    | [Copilot CLI](https://github.com/github/copilot-cli)              | `nix build .#copilot-cli`    |
+| `crush`          | [Crush](https://github.com/charmbracelet/crush)                   | `nix build .#crush`          |
+| `cursor-agent`   | [Cursor Agent](https://cursor.com/)                               | `nix build .#cursor-agent`   |
+| `droid`          | [Droid](https://factory.ai)                                       | `nix build .#droid`          |
+| `eca`            | [ECA](https://github.com/editor-code-assistant/eca)               | `nix build .#eca`            |
+| `forge`          | [Forge](https://github.com/antinomyhq/forge)                      | `nix build .#forge`          |
+| `gemini-cli`     | [Gemini CLI](https://github.com/google-gemini/gemini-cli)         | `nix build .#gemini-cli`     |
+| `goose-cli`      | [Goose](https://github.com/block/goose)                           | `nix build .#goose-cli`      |
+| `iflow-cli`      | [iFlow CLI](https://github.com/iflow-ai/iflow-cli)                | `nix build .#iflow-cli`      |
+| `jules`          | [Jules](https://jules.google)                                     | `nix build .#jules`          |
+| `kilocode-cli`   | [Kilocode CLI](https://kilocode.ai/cli)                           | `nix build .#kilocode-cli`   |
+| `letta-code`     | [Letta Code](https://github.com/letta-ai/letta-code)              | `nix build .#letta-code`     |
+| `mistral-vibe`   | [Mistral Vibe](https://github.com/mistralai/mistral-vibe)         | `nix build .#mistral-vibe`   |
+| `nanocoder`      | [Nanocoder](https://github.com/Mote-Software/nanocoder)           | `nix build .#nanocoder`      |
 | `oh-my-opencode` | [Oh My OpenCode](https://github.com/code-yeongyu/oh-my-openagent) | `nix build .#oh-my-opencode` |
-| `omp` | [OMP](https://github.com/can1357/oh-my-pi) | `nix build .#omp` |
-| `opencode` | [OpenCode](https://github.com/anomalyco/opencode) | `nix build .#opencode` |
-| `pi` | [Pi](https://github.com/badlogic/pi-mono) | `nix build .#pi` |
-| `qoder-cli` | [Qoder CLI](https://qoder.com) | `nix build .#qoder-cli` |
-| `qwen-code` | [Qwen Code](https://github.com/QwenLM/qwen-code) | `nix build .#qwen-code` |
+| `omp`            | [OMP](https://github.com/can1357/oh-my-pi)                        | `nix build .#omp`            |
+| `opencode`       | [OpenCode](https://github.com/anomalyco/opencode)                 | `nix build .#opencode`       |
+| `pi`             | [Pi](https://github.com/badlogic/pi-mono)                         | `nix build .#pi`             |
+| `qoder-cli`      | [Qoder CLI](https://qoder.com)                                    | `nix build .#qoder-cli`      |
+| `qwen-code`      | [Qwen Code](https://github.com/QwenLM/qwen-code)                  | `nix build .#qwen-code`      |
 
 #### AI Assistants
 
-| Image | Agent | Build |
-|-------|-------|-------|
+| Image          | Agent                                                  | Build                      |
+| -------------- | ------------------------------------------------------ | -------------------------- |
 | `hermes-agent` | [Hermes Agent](https://hermes-agent.nousresearch.com/) | `nix build .#hermes-agent` |
-| `localgpt` | [LocalGPT](https://github.com/localgpt-app/localgpt) | `nix build .#localgpt` |
-| `openclaw` | [OpenClaw](https://openclaw.ai) | `nix build .#openclaw` |
-| `picoclaw` | [PicoClaw](https://picoclaw.io) | `nix build .#picoclaw` |
-| `zeroclaw` | [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw) | `nix build .#zeroclaw` |
+| `localgpt`     | [LocalGPT](https://github.com/localgpt-app/localgpt)   | `nix build .#localgpt`     |
+| `openclaw`     | [OpenClaw](https://openclaw.ai)                        | `nix build .#openclaw`     |
+| `picoclaw`     | [PicoClaw](https://picoclaw.io)                        | `nix build .#picoclaw`     |
+| `zeroclaw`     | [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw)  | `nix build .#zeroclaw`     |
 
-Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). By default, containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory. Both the user and working directory can be customised (see [Custom Images](#custom-images)).
+Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, which, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). By default, containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory. Both the user and working directory can be customised (see [Custom Images](#custom-images)).
 
 ## Requirements
 
@@ -65,6 +65,16 @@ Each image includes a default set of base packages: git, coreutils, bash, ripgre
 - [Podman](https://podman.io/) or [Docker](https://www.docker.com/) for loading and running images
 
 All other dependencies (including agent packages from [llm-agents.nix](https://github.com/numtide/llm-agents.nix)) are resolved automatically by the Nix flake. NixOS users should also follow the [rootless Podman setup](#nixos-rootless-podman-setup) steps below.
+
+**macOS:** Images are Linux-only. On macOS, specify the target system explicitly and ensure you have a [Linux remote builder](https://nix.dev/manual/nix/latest/advanced-topics/distributed-builds) configured (e.g. via Docker Desktop or nix-darwin's `linux-builder`):
+
+```bash
+nix build .#packages.x86_64-linux.<agent>
+# or for ARM:
+nix build .#packages.aarch64-linux.<agent>
+```
+
+Dev tooling (`nix fmt`, `nix develop`, `nix flake check`) works natively on macOS.
 
 ## Quick Start
 
@@ -105,21 +115,13 @@ podman run --rm --entrypoint sh localhost/agent-images/<agent>:latest \
 ```
 
 Expected output:
+
 ```
 agent
 /home/agent
 /workspace
 /nix/store/.../bin/git
 /nix/store/.../bin/rg
-```
-
-### Smoke Test
-
-To run the build, load, and verification steps automatically:
-
-```bash
-nix run .#smoke-test           # defaults to opencode
-nix run .#smoke-test -- codex  # or specify any agent
 ```
 
 ## Usage with agent-box
@@ -224,9 +226,7 @@ You also need a container trust policy. Create `~/.config/containers/policy.json
 
 ```json
 {
-  "default": [
-    { "type": "insecureAcceptAnything" }
-  ]
+  "default": [{ "type": "insecureAcceptAnything" }]
 }
 ```
 
@@ -280,7 +280,7 @@ mkAgentImage {
 
 ### Customising User and Working Directory
 
-By default, containers run as user `agent` (uid 1000) with `/workspace` as the working directory. Override these with `user`, `uid`, and `workingDir`:
+By default, containers run as user `agent` (uid/gid 1000) with `/workspace` as the working directory. Override these with `user`, `uid`, `gid`, and `workingDir`:
 
 ```nix
 mkAgentImage {
@@ -289,8 +289,145 @@ mkAgentImage {
   entrypoint = [ "my-agent" ];
   user = "dev";
   uid = 1001;
+  gid = 100;  # defaults to uid if omitted
   workingDir = "/project";
 }
+```
+
+Setting `gid` independently from `uid` is useful for rootless Podman users whose host group (e.g. `users`, gid 100) differs from their uid. Without it, files created inside the container may have a gid that maps to an unexpected value on the host.
+
+## Using Nix Inside Containers
+
+By default, the Nix CLI is not included in images. Set `withNix = true` to enable Nix workflows inside the container:
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  withNix = true;
+};
+```
+
+This configures single-user Nix with `nix-command` and `flakes` experimental features enabled. Inside the container, you can run:
+
+```bash
+nix --version
+nix develop
+nix build
+nix shell nixpkgs#hello -c hello
+nix-shell -p ripgrep --command "rg --version"
+```
+
+### Overriding the Nix Version
+
+The Nix CLI version defaults to whatever the flake's nixpkgs pins. Pass `nixPackage` to use a different version:
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  withNix = true;
+  nixPackage = my-custom-nix;
+};
+```
+
+### Customising Experimental Features
+
+The default experimental features are `nix-command` and `flakes`. Override with `nixExperimentalFeatures`:
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  withNix = true;
+  nixExperimentalFeatures = [ "nix-command" "flakes" "pipe-operators" ];
+};
+```
+
+### Adding direnv
+
+direnv is not included by default but can be added via `extraPackages`:
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  withNix = true;
+  extraPackages = [ pkgs.direnv pkgs.nix-direnv ];
+};
+```
+
+You will also need to wire up the shell hook. Add an `extraEnv` entry or configure `.bashrc` in the container's home directory to run `eval "$(direnv hook bash)"`.
+
+### Known Limitations
+
+- **No build sandbox**: Nix builds inside the container run with `sandbox = false` because container runtimes typically restrict namespace creation. Builds are not hermetic - a derivation that succeeds in the container may fail in a sandboxed environment. If your container runs with elevated privileges, you can override this by mounting a custom `nix.conf` with `sandbox = relaxed` or `sandbox = true`.
+- **Image size**: Enabling `withNix` adds the Nix CLI and its dependencies to the image. Expect roughly 50-150 MB of additional size depending on the nixpkgs pin.
+- **Rootless Podman UID remapping**: Rootless Podman remaps UIDs by default, which can cause permission errors when writing to `/nix/store`, `/tmp`, or `$HOME` inside the container. If you encounter these errors, pass `--userns=keep-id` to map your host UID directly into the container. Docker and rootful Podman do not have this issue.
+  ```bash
+  podman run --rm -it \
+    --userns=keep-id \
+    -v ./my-project:/workspace \
+    -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+    localhost/agent-images/claude-code:latest
+  ```
+
+### Host Store Mount Optimisation
+
+If the host machine has Nix installed, you can bind-mount the host store read-only to avoid duplicating store paths:
+
+```bash
+podman run --rm -it \
+  --mount type=bind,src=/nix/store,dst=/nix/store,ro \
+  -v ./my-project:/workspace \
+  localhost/agent-images/my-agent:latest
+```
+
+This is useful for reducing disk usage but couples the container to the host's Nix installation.
+
+## Development
+
+### Tests
+
+Tests are Linux-only (they build and run container images). On macOS, specify the system explicitly, e.g. `nix run .#apps.x86_64-linux.test`.
+
+```bash
+nix run .#test-default                    # default image (opencode)
+AGENT=codex nix run .#test-default        # or specify any agent
+nix run .#test-nix                        # basic Nix checks (offline)
+nix run .#test-nix-install                # runtime install + nix develop (requires network)
+nix run .#test-nix-custom                 # custom user/uid/gid, experimental features, extraEnv (with Nix)
+nix run .#test-custom                     # custom user/uid/gid/workingDir, extraPackages, extraEnv (without Nix)
+nix run .#test-nix-userns                 # Nix with --userns=keep-id (Podman only, skipped under Docker)
+nix run .#test                            # run all of the above
+```
+
+### Formatting
+
+```bash
+nix fmt        # format all files (Nix, shell, YAML, Markdown)
+nix fmt -- --ci  # check without modifying (used in CI)
+```
+
+Pre-commit hooks are set up automatically when entering the dev shell (`nix develop`). They run `nix fmt` on staged files before each commit.
+
+The SHA of any bulk formatting commit should be added to [.git-blame-ignore-revs](.git-blame-ignore-revs) and configured locally with:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
+### Linting
+
+```bash
+nix run .#lint        # run all linters
+nix run .#shellcheck  # run shellcheck across all test files
+nix run .#deadnix     # find unused bindings in Nix files
+nix run .#actionlint  # validate GitHub Actions workflow files
 ```
 
 ## License

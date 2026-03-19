@@ -1,0 +1,4 @@
+# Formatting commits — ignored by git blame.
+# Configure with: git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# Add the SHA of the formatting commit here after it is made.
