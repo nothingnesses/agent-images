@@ -68,6 +68,7 @@ setup() {
 }
 
 @test "extraDirectories are created and owned by the runtime user" {
+  # shellcheck disable=SC2016
   run run_in "${IMAGE}" '
     [ -d "$HOME/.dev-cache" ] || exit 1
     [ "$(stat -c %u:%g "$HOME/.dev-cache")" = "1002:100" ] || exit 1
