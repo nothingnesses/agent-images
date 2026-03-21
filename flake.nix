@@ -124,6 +124,10 @@
             extraEnv = {
               CUSTOM_VAR = "custom-value";
             };
+            extraDirectories = [
+              "~/.dev-cache"
+              "/var/dev-cache"
+            ];
           };
 
           testsDir = ./tests;

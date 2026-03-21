@@ -57,7 +57,7 @@ reproducible and easy to customise.
 | `picoclaw`     | [PicoClaw](https://picoclaw.io)                        | `nix build .#picoclaw`     |
 | `zeroclaw`     | [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw)  | `nix build .#zeroclaw`     |
 
-Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, which, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). By default, containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory. Both the user and working directory can be customised (see [Custom Images](#custom-images)).
+Each image includes a default set of base packages: git, coreutils, bash, ripgrep, findutils, grep, sed, gawk, diff, jq, tar, gzip, less, curl, which, and CA certificates. These can be overridden via the `basePackages` parameter (see [Custom Images](#custom-images)). By default, containers run as a non-root `agent` user (uid 1000) with `/workspace` as the working directory. The image also pre-creates standard XDG base directories under `$HOME` (`.config`, `.cache`, `.local/share`, `.local/state`) so mounting subpaths into them does not leave root-owned parent directories behind. Both the user and working directory can be customised (see [Custom Images](#custom-images)).
 
 ## Requirements
 
@@ -260,6 +260,7 @@ Use `mkAgentImage` to build your own agent images:
         entrypoint = [ "my-agent" ];
         extraPackages = [ pkgs.nodejs ];
         extraEnv = { MY_VAR = "value"; };
+        extraDirectories = [ "~/.my-agent-cache" "/var/my-agent-cache" ];
       };
     };
 }
@@ -295,6 +296,31 @@ mkAgentImage {
 ```
 
 Setting `gid` independently from `uid` is useful for rootless Podman users whose host group (e.g. `users`, gid 100) differs from their uid. Without it, files created inside the container may have a gid that maps to an unexpected value on the host.
+
+### Pre-creating Additional Writable Directories
+
+`mkAgentImage` always creates `$HOME`, the working directory, and these XDG base directories owned by the runtime user:
+
+- `$HOME/.config`
+- `$HOME/.cache`
+- `$HOME/.local/share`
+- `$HOME/.local/state`
+
+This avoids a common container-runtime footgun where mounting a subdirectory such as `/home/agent/.config/git` causes the missing parent to be auto-created as `root:root`.
+
+If you need more writable directories owned by the runtime user, pass `extraDirectories` as absolute container paths or `~/...` paths relative to the container user's home:
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  extraDirectories = [
+    "~/.my-agent-cache"
+    "/opt/my-agent/state"
+  ];
+}
+```
 
 ## Using Nix Inside Containers
 

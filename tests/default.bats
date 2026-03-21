@@ -69,6 +69,18 @@ setup() {
   [[ ${status} -eq 0 ]]
 }
 
+@test "XDG base directories exist and are writable" {
+  # shellcheck disable=SC2016
+  run run_in "${IMAGE}" '
+    for dir in "$HOME/.config" "$HOME/.cache" "$HOME/.local/share" "$HOME/.local/state"; do
+      [ -d "$dir" ] || exit 1
+      touch "$dir/.write-test" || exit 1
+      rm "$dir/.write-test" || exit 1
+    done
+  '
+  [[ ${status} -eq 0 ]]
+}
+
 @test "SSL_CERT_FILE is set and exists" {
   # shellcheck disable=SC2016
   run run_in "${IMAGE}" '[ -n "$SSL_CERT_FILE" ] && [ -f "$SSL_CERT_FILE" ]'

@@ -33,6 +33,7 @@ in
   basePackages ? defaultBasePackages,
   extraPackages ? [ ],
   extraEnv ? { },
+  extraDirectories ? [ ],
   withNix ? false,
   nixPackage ? pkgs.nix,
   nixExperimentalFeatures ? [
@@ -57,6 +58,32 @@ let
   uidStr = toString uid;
   gidStr = toString gid;
 
+  normalizeOwnedDirectory =
+    dir:
+    if dir == "~" then
+      home
+    else if lib.hasPrefix "~/" dir then
+      "${home}/${lib.removePrefix "~/" dir}"
+    else
+      dir;
+
+  defaultOwnedDirectories = [
+    home
+    "${home}/.config"
+    "${home}/.cache"
+    "${home}/.local"
+    "${home}/.local/share"
+    "${home}/.local/state"
+    workingDir
+  ];
+  ownedDirectories = lib.unique (
+    defaultOwnedDirectories ++ map normalizeOwnedDirectory extraDirectories
+  );
+  ownedDirectoriesAreAbsolute = lib.all (dir: lib.hasPrefix "/" dir) ownedDirectories;
+  ownedDirectoryArgs = lib.concatMapStringsSep " " (
+    dir: lib.escapeShellArg ".${dir}"
+  ) ownedDirectories;
+
   nixFakeRootCommands = lib.optionalString withNix ''
     chown -R ${uidStr}:${gidStr} ./nix
   '';
@@ -66,6 +93,8 @@ let
     "NIX_PATH=nixpkgs=${pkgs.path}"
   ];
 in
+assert lib.assertMsg ownedDirectoriesAreAbsolute
+  "mkAgentImage: extraDirectories entries must be absolute container paths or use ~/...";
 pkgs.dockerTools.buildLayeredImage {
   meta = agent.meta or { };
   inherit name tag;
@@ -73,7 +102,7 @@ pkgs.dockerTools.buildLayeredImage {
   includeNixDB = withNix;
 
   fakeRootCommands = ''
-    mkdir -p ./etc .${home} ./tmp .${workingDir}
+    mkdir -p ./etc ./tmp ${ownedDirectoryArgs}
     cat > ./etc/passwd <<'PASSWD'
     root:x:0:0:root:/root:/bin/bash
     ${user}:x:${uidStr}:${gidStr}:${user}:${home}:/bin/bash
@@ -86,7 +115,7 @@ pkgs.dockerTools.buildLayeredImage {
     hosts: files dns
     NSS
     chmod 1777 ./tmp
-    chown ${uidStr}:${gidStr} .${home} .${workingDir}
+    chown ${uidStr}:${gidStr} ${ownedDirectoryArgs}
   ''
   + nixFakeRootCommands;
 
