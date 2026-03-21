@@ -14,7 +14,7 @@ setup() {
 }
 
 @test "runtime package installation with nix-shell" {
-  run run_in "${IMAGE}" 'nix-shell -p hello --command hello'
+  run run_in -- "${IMAGE}" 'nix-shell -p hello --command hello'
   [[ ${status} -eq 0 ]]
 }
 
