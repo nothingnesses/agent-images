@@ -19,58 +19,88 @@ setup() {
 }
 
 @test "user is agent" {
-  run run_in "${IMAGE}" whoami
+  run run_in -- "${IMAGE}" whoami
   [[ ${status} -eq 0 ]]
   [[ ${output} == "agent" ]]
 }
 
 @test "default gid matches uid" {
   # shellcheck disable=SC2016
-  run run_in "${IMAGE}" '[ "$(id -g)" = "$(id -u)" ]'
+  run run_in -- "${IMAGE}" '[ "$(id -g)" = "$(id -u)" ]'
   [[ ${status} -eq 0 ]]
 }
 
 @test "HOME is /home/agent" {
   # shellcheck disable=SC2016
-  run run_in "${IMAGE}" 'echo $HOME'
+  run run_in -- "${IMAGE}" 'echo $HOME'
   [[ ${status} -eq 0 ]]
   [[ ${output} == "/home/agent" ]]
 }
 
 @test "working directory is /workspace" {
-  run run_in "${IMAGE}" pwd
+  run run_in -- "${IMAGE}" pwd
   [[ ${status} -eq 0 ]]
   [[ ${output} == "/workspace" ]]
 }
 
 @test "git is available" {
-  run run_in "${IMAGE}" 'command -v git'
+  run run_in -- "${IMAGE}" 'command -v git'
   [[ ${status} -eq 0 ]]
 }
 
 @test "rg is available" {
-  run run_in "${IMAGE}" 'command -v rg'
+  run run_in -- "${IMAGE}" 'command -v rg'
   [[ ${status} -eq 0 ]]
 }
 
 @test "nix is not available by default" {
-  run run_in "${IMAGE}" 'command -v nix'
+  run run_in -- "${IMAGE}" 'command -v nix'
   [[ ${status} -ne 0 ]]
 }
 
 @test "/tmp is writable" {
-  run run_in "${IMAGE}" 'touch /tmp/test-file && rm /tmp/test-file'
+  run run_in -- "${IMAGE}" 'touch /tmp/test-file && rm /tmp/test-file'
   [[ ${status} -eq 0 ]]
 }
 
 @test "HOME is writable" {
   # shellcheck disable=SC2016
-  run run_in "${IMAGE}" 'touch $HOME/test-file && rm $HOME/test-file'
+  run run_in -- "${IMAGE}" 'touch $HOME/test-file && rm $HOME/test-file'
+  [[ ${status} -eq 0 ]]
+}
+
+@test "XDG env vars are set to defaults" {
+  # shellcheck disable=SC2016
+  run run_in -- "${IMAGE}" '
+    [ "$XDG_CONFIG_HOME" = "/home/agent/.config" ] &&
+    [ "$XDG_CACHE_HOME" = "/home/agent/.cache" ] &&
+    [ "$XDG_DATA_HOME" = "/home/agent/.local/share" ] &&
+    [ "$XDG_STATE_HOME" = "/home/agent/.local/state" ]
+  '
+  [[ ${status} -eq 0 ]]
+}
+
+@test "XDG base directories exist and are writable" {
+  # shellcheck disable=SC2016
+  run run_in -- "${IMAGE}" '
+    for dir in "$HOME/.config" "$HOME/.cache" "$HOME/.local/share" "$HOME/.local/state"; do
+      [ -d "$dir" ] || exit 1
+      touch "$dir/.write-test" || exit 1
+      rm "$dir/.write-test" || exit 1
+    done
+  '
+  [[ ${status} -eq 0 ]]
+}
+
+@test "subpath mount does not break parent writability" {
+  # shellcheck disable=SC2016
+  run run_in --tmpfs /home/agent/.config/test-subdir:rw -- "${IMAGE}" \
+    'touch $HOME/.config/.write-test && rm $HOME/.config/.write-test'
   [[ ${status} -eq 0 ]]
 }
 
 @test "SSL_CERT_FILE is set and exists" {
   # shellcheck disable=SC2016
-  run run_in "${IMAGE}" '[ -n "$SSL_CERT_FILE" ] && [ -f "$SSL_CERT_FILE" ]'
+  run run_in -- "${IMAGE}" '[ -n "$SSL_CERT_FILE" ] && [ -f "$SSL_CERT_FILE" ]'
   [[ ${status} -eq 0 ]]
 }

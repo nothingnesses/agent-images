@@ -123,7 +123,15 @@
             extraPackages = [ pkgs.hello ];
             extraEnv = {
               CUSTOM_VAR = "custom-value";
+              XDG_CONFIG_HOME = "/home/dev/.custom-config";
             };
+            extraDirectories = [
+              "~"
+              "~/.dev-cache"
+              "~/.custom-config"
+              "~/.my+app@v2"
+              "/opt/dev-cache"
+            ];
           };
 
           testsDir = ./tests;
@@ -211,9 +219,30 @@
 
           formatter = treefmtEval.config.build.wrapper;
 
-          checks = {
-            inherit pre-commit-check;
-          };
+          checks =
+            let
+              assertRejects =
+                name: dirs:
+                let
+                  result = builtins.tryEval (mkAgentImage {
+                    name = "assert-test";
+                    agent = agents.opencode;
+                    entrypoint = [ agents.opencode.meta.mainProgram ];
+                    extraDirectories = dirs;
+                  });
+                in
+                assert !result.success;
+                pkgs.runCommand "assert-rejects-${name}" { } "touch $out";
+            in
+            {
+              inherit pre-commit-check;
+              assert-rejects-relative-path = assertRejects "relative-path" [ "relative/path" ];
+              assert-rejects-denied-prefix-etc = assertRejects "denied-prefix-etc" [ "/etc/shadow" ];
+              assert-rejects-denied-prefix-var = assertRejects "denied-prefix-var" [ "/var/data" ];
+              assert-rejects-dotdot-traversal = assertRejects "dotdot-traversal" [ "/nix/../etc" ];
+              assert-rejects-whitespace = assertRejects "whitespace" [ "/foo bar" ];
+              assert-rejects-bare-denied = assertRejects "bare-denied" [ "/etc" ];
+            };
 
           devShells.default = pkgs.mkShell {
             packages = [
