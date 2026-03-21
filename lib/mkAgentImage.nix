@@ -79,10 +79,38 @@ let
   ownedDirectories = lib.unique (
     defaultOwnedDirectories ++ map normalizeOwnedDirectory extraDirectories
   );
-  ownedDirectoriesAreAbsolute = lib.all (dir: lib.hasPrefix "/" dir) ownedDirectories;
   ownedDirectoryArgs = lib.concatMapStringsSep " " (
     dir: lib.escapeShellArg ".${dir}"
   ) ownedDirectories;
+
+  xdgEnvPairs = {
+    XDG_CONFIG_HOME = "${home}/.config";
+    XDG_CACHE_HOME = "${home}/.cache";
+    XDG_DATA_HOME = "${home}/.local/share";
+    XDG_STATE_HOME = "${home}/.local/state";
+  };
+
+  # Filter out any XDG vars that the user overrides via extraEnv,
+  # avoiding duplicate env var names (undefined behavior per OCI spec).
+  xdgEnvVars = lib.mapAttrsToList (k: v: "${k}=${v}") (
+    lib.filterAttrs (k: _: !(lib.hasAttr k extraEnv)) xdgEnvPairs
+  );
+
+  deniedPrefixes = [
+    "/etc"
+    "/bin"
+    "/usr"
+    "/lib"
+    "/sbin"
+    "/dev"
+    "/proc"
+    "/sys"
+    "/run"
+    "/tmp"
+    "/nix"
+    "/var"
+    "/root"
+  ];
 
   nixFakeRootCommands = lib.optionalString withNix ''
     chown -R ${uidStr}:${gidStr} ./nix
@@ -93,8 +121,17 @@ let
     "NIX_PATH=nixpkgs=${pkgs.path}"
   ];
 in
-assert lib.assertMsg ownedDirectoriesAreAbsolute
-  "mkAgentImage: extraDirectories entries must be absolute container paths or use ~/...";
+assert lib.assertMsg (lib.all (d: lib.hasPrefix "/" d)
+  ownedDirectories
+) "mkAgentImage: extraDirectories entries must be absolute container paths or use ~/...";
+assert lib.assertMsg
+  (lib.all (d: !(lib.any (p: d == p || lib.hasPrefix (p + "/") d) deniedPrefixes)) ownedDirectories)
+  "mkAgentImage: extraDirectories must not include system paths (${lib.concatStringsSep ", " deniedPrefixes})";
+assert lib.assertMsg (lib.all (d: builtins.match "[a-zA-Z0-9/_.+@-]+" d != null) ownedDirectories)
+  "mkAgentImage: extraDirectories paths may only contain alphanumeric characters, /, _, ., +, @, and -";
+assert lib.assertMsg (lib.all (
+  d: builtins.match ".*\\.\\." d == null
+) ownedDirectories) "mkAgentImage: extraDirectories paths must not contain '..' components";
 pkgs.dockerTools.buildLayeredImage {
   meta = agent.meta or { };
   inherit name tag;
@@ -129,6 +166,7 @@ pkgs.dockerTools.buildLayeredImage {
       "PATH=${lib.makeBinPath allPackages}"
       "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
     ]
+    ++ xdgEnvVars
     ++ nixEnvVars
     ++ (lib.mapAttrsToList (k: v: "${k}=${v}") extraEnv);
   };

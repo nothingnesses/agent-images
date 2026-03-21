@@ -260,7 +260,7 @@ Use `mkAgentImage` to build your own agent images:
         entrypoint = [ "my-agent" ];
         extraPackages = [ pkgs.nodejs ];
         extraEnv = { MY_VAR = "value"; };
-        extraDirectories = [ "~/.my-agent-cache" "/var/my-agent-cache" ];
+        extraDirectories = [ "~/.my-agent-cache" "/opt/my-agent-cache" ];
       };
     };
 }
@@ -297,7 +297,7 @@ mkAgentImage {
 
 Setting `gid` independently from `uid` is useful for rootless Podman users whose host group (e.g. `users`, gid 100) differs from their uid. Without it, files created inside the container may have a gid that maps to an unexpected value on the host.
 
-### Pre-creating Additional Writable Directories
+### XDG Base Directories and Extra Writable Paths
 
 `mkAgentImage` always creates `$HOME`, the working directory, and these XDG base directories owned by the runtime user:
 
@@ -305,6 +305,8 @@ Setting `gid` independently from `uid` is useful for rootless Podman users whose
 - `$HOME/.cache`
 - `$HOME/.local/share`
 - `$HOME/.local/state`
+
+The corresponding environment variables (`XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME`, `XDG_STATE_HOME`) are also set to these defaults. If you override any of them via `extraEnv`, the default for that variable is suppressed to avoid duplicates.
 
 This avoids a common container-runtime footgun where mounting a subdirectory such as `/home/agent/.config/git` causes the missing parent to be auto-created as `root:root`.
 
@@ -321,6 +323,24 @@ mkAgentImage {
   ];
 }
 ```
+
+Only the listed paths are chowned to the runtime user. Intermediate parent directories created by `mkdir -p` for paths outside `$HOME` remain root-owned. If you need writable intermediates, list them explicitly in `extraDirectories`.
+
+To use a non-standard XDG path, combine `extraDirectories` (to create the directory) with `extraEnv` (to set the environment variable):
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  extraDirectories = [ "~/.custom-config" ];
+  extraEnv = { XDG_CONFIG_HOME = "/home/agent/.custom-config"; };
+}
+```
+
+`XDG_RUNTIME_DIR` is intentionally excluded. It is managed by `pam_systemd`, requires a tmpfs with strict lifecycle semantics, and cannot be meaningfully pre-created in a container image.
+
+`extraDirectories` entries are validated at build time. Paths must be absolute (or use `~/`), may only contain alphanumeric characters, `/`, `_`, `.`, `+`, `@`, and `-`, and must not contain `..` components. System paths (`/etc`, `/bin`, `/usr`, `/lib`, `/sbin`, `/dev`, `/proc`, `/sys`, `/run`, `/tmp`, `/nix`, `/var`, `/root`) are rejected to prevent accidental ownership changes to critical directories.
 
 ## Using Nix Inside Containers
 
