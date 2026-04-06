@@ -40,6 +40,8 @@ in
     "nix-command"
     "flakes"
   ],
+  withNixLd ? false,
+  nixLdLibraryPathPackages ? [ ],
 }:
 
 let
@@ -52,7 +54,20 @@ let
     nixPackage
     nixConf
   ];
-  allPackages = [ agent ] ++ basePackages ++ extraPackages ++ nixDeps;
+
+  nixLdLinkPath = lib.removeSuffix "\n" (builtins.readFile "${pkgs.nix-ld}/nix-support/ldpath");
+  nixLdLinkDir = builtins.dirOf nixLdLinkPath;
+  nixLdTarget = "${pkgs.nix-ld}/libexec/nix-ld";
+  nixLdLibraryPath = lib.makeLibraryPath (
+    [
+      pkgs.glibc
+      pkgs.stdenv.cc.cc
+    ]
+    ++ nixLdLibraryPathPackages
+  );
+  nixLdDeps = lib.optionals withNixLd [ pkgs.nix-ld ];
+
+  allPackages = [ agent ] ++ basePackages ++ extraPackages ++ nixDeps ++ nixLdDeps;
 
   home = "/home/${user}";
   uidStr = toString uid;
@@ -116,9 +131,19 @@ let
     chown -R ${uidStr}:${gidStr} ./nix
   '';
 
+  nixLdFakeRootCommands = lib.optionalString withNixLd ''
+    mkdir -p .${nixLdLinkDir}
+    ln -s ${lib.escapeShellArg nixLdTarget} .${nixLdLinkPath}
+  '';
+
   nixEnvVars = lib.optionals withNix [
     "NIX_CONF_DIR=/etc/nix"
     "NIX_PATH=nixpkgs=${pkgs.path}"
+  ];
+
+  nixLdEnvVars = lib.optionals withNixLd [
+    "NIX_LD=${nixLdTarget}"
+    "NIX_LD_LIBRARY_PATH=${nixLdLibraryPath}"
   ];
 in
 assert lib.assertMsg (lib.all (d: lib.hasPrefix "/" d)
@@ -154,7 +179,8 @@ pkgs.dockerTools.buildLayeredImage {
     chmod 1777 ./tmp
     chown ${uidStr}:${gidStr} ${ownedDirectoryArgs}
   ''
-  + nixFakeRootCommands;
+  + nixFakeRootCommands
+  + nixLdFakeRootCommands;
 
   config = {
     User = user;
@@ -168,6 +194,7 @@ pkgs.dockerTools.buildLayeredImage {
     ]
     ++ xdgEnvVars
     ++ nixEnvVars
+    ++ nixLdEnvVars
     ++ (lib.mapAttrsToList (k: v: "${k}=${v}") extraEnv);
   };
 }

@@ -99,6 +99,7 @@
             agent = agents.opencode;
             entrypoint = [ agents.opencode.meta.mainProgram ];
             withNix = true;
+            withNixLd = true;
             user = "ci";
             uid = 1001;
             gid = 100;
@@ -106,6 +107,10 @@
               "nix-command"
               "flakes"
               "pipe-operators"
+            ];
+            extraPackages = [
+              pkgs.hello
+              pkgs.patchelf
             ];
             extraEnv = {
               MY_VAR = "test-value";
