@@ -410,7 +410,7 @@ mkAgentImage {
 
 This adds `pkgs.nix-ld`, creates the architecture-appropriate dynamic linker symlink inside the image, and sets `NIX_LD`/`NIX_LD_LIBRARY_PATH` automatically.
 
-By default, `NIX_LD_LIBRARY_PATH` includes glibc and the default C toolchain runtime libraries. If your foreign binary needs more shared libraries, extend the search path with `nixLdLibraryPathPackages`:
+By default, `NIX_LD` points to the system dynamic linker and `NIX_LD_LIBRARY_PATH` mirrors the upstream NixOS `programs.nix-ld` default library set. If your foreign binary needs more shared libraries, extend the search path with `nixLdLibraryPathPackages`:
 
 ```nix
 mkAgentImage {

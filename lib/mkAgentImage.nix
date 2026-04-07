@@ -19,6 +19,25 @@ let
     gzip
     which
   ];
+
+  # Keep in sync with nixpkgs:
+  # nixos/modules/programs/nix-ld.nix
+  defaultNixLdLibraryPackages = with pkgs; [
+    zlib
+    zstd
+    stdenv.cc.cc
+    curl
+    openssl
+    attr
+    libssh
+    bzip2
+    libxml2
+    acl
+    libsodium
+    util-linux
+    xz
+    systemd
+  ];
 in
 
 {
@@ -58,12 +77,9 @@ let
   nixLdLinkPath = lib.removeSuffix "\n" (builtins.readFile "${pkgs.nix-ld}/nix-support/ldpath");
   nixLdLinkDir = builtins.dirOf nixLdLinkPath;
   nixLdTarget = "${pkgs.nix-ld}/libexec/nix-ld";
+  nixLdDefault = pkgs.stdenv.cc.bintools.dynamicLinker;
   nixLdLibraryPath = lib.makeLibraryPath (
-    [
-      pkgs.glibc
-      pkgs.stdenv.cc.cc
-    ]
-    ++ nixLdLibraryPathPackages
+    map lib.getLib (defaultNixLdLibraryPackages ++ nixLdLibraryPathPackages)
   );
   nixLdDeps = lib.optionals withNixLd [ pkgs.nix-ld ];
 
@@ -142,7 +158,7 @@ let
   ];
 
   nixLdEnvVars = lib.optionals withNixLd [
-    "NIX_LD=${nixLdTarget}"
+    "NIX_LD=${nixLdDefault}"
     "NIX_LD_LIBRARY_PATH=${nixLdLibraryPath}"
   ];
 in

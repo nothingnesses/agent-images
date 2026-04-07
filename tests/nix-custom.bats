@@ -105,7 +105,16 @@ setup() {
   run run_in -- "${IMAGE}" '
     link=$(find /lib /lib32 /lib64 -maxdepth 1 -type l 2>/dev/null | head -1)
     [ -n "$link" ] || exit 1
-    [ "$(readlink -f "$link")" = "$(readlink -f "$NIX_LD")" ]
+    [ "$(readlink -f "$link")" = "$(readlink -f "$(command -v nix-ld)")" ]
+  '
+  [[ ${status} -eq 0 ]]
+}
+
+@test "NIX_LD points to the real dynamic linker, not nix-ld" {
+  # shellcheck disable=SC2016
+  run run_in -- "${IMAGE}" '
+    [ "$(readlink -f "$NIX_LD")" = "$(readlink -f "$(patchelf --print-interpreter "$(command -v hello)")")" ] &&
+    [ "$(readlink -f "$NIX_LD")" != "$(readlink -f "$(command -v nix-ld)")" ]
   '
   [[ ${status} -eq 0 ]]
 }
