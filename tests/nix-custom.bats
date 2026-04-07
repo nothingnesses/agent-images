@@ -113,7 +113,8 @@ setup() {
 @test "NIX_LD points to the real dynamic linker, not nix-ld" {
   # shellcheck disable=SC2016
   run run_in -- "${IMAGE}" '
-    [ "$(readlink -f "$NIX_LD")" = "$(readlink -f "$(patchelf --print-interpreter "$(command -v hello)")")" ] &&
+    [ -n "$EXPECTED_NIX_LD" ] &&
+    [ "$(readlink -f "$NIX_LD")" = "$(readlink -f "$EXPECTED_NIX_LD")" ] &&
     [ "$(readlink -f "$NIX_LD")" != "$(readlink -f "$(command -v nix-ld)")" ]
   '
   [[ ${status} -eq 0 ]]

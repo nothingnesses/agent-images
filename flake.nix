@@ -114,6 +114,7 @@
             ];
             extraEnv = {
               MY_VAR = "test-value";
+              EXPECTED_NIX_LD = pkgs.stdenv.cc.bintools.dynamicLinker;
             };
           };
 
