@@ -20,9 +20,9 @@ let
     which
   ];
 
-  # Keep in sync with nixpkgs:
-  # nixos/modules/programs/nix-ld.nix
-  defaultNixLdLibraryPackages = with pkgs; [
+  # Keep in sync with nixpkgs (nixos/modules/programs/nix-ld.nix).
+  # Last synced: 2026-04-06, nixpkgs commit e4bae1bd10c9.
+  defaultNixLdLibraries = with pkgs; [
     zlib
     zstd
     stdenv.cc.cc
@@ -36,7 +36,7 @@ let
     libsodium
     util-linux
     xz
-    systemd
+    systemd # heavyweight; users who need smaller images can override nixLdLibraries
   ];
 in
 
@@ -60,7 +60,8 @@ in
     "flakes"
   ],
   withNixLd ? false,
-  nixLdLibraryPathPackages ? [ ],
+  nixLdLibraries ? defaultNixLdLibraries,
+  extraNixLdLibraries ? [ ],
 }:
 
 let
@@ -74,13 +75,23 @@ let
     nixConf
   ];
 
+  # These bindings are only demanded transitively through nixLdFakeRootCommands,
+  # nixLdDeps, and nixLdEnvVars, all of which short-circuit to empty values when
+  # withNixLd = false. Nix never evaluates the right-hand side of a let binding
+  # that is not demanded, so pkgs.nix-ld is not fetched/built when the feature
+  # is disabled. This is safe but fragile: any future code that references these
+  # bindings outside a withNixLd gate would silently force pkgs.nix-ld.
   nixLdLinkPath = lib.removeSuffix "\n" (builtins.readFile "${pkgs.nix-ld}/nix-support/ldpath");
   nixLdLinkDir = builtins.dirOf nixLdLinkPath;
   nixLdTarget = "${pkgs.nix-ld}/libexec/nix-ld";
-  nixLdDefault = pkgs.stdenv.cc.bintools.dynamicLinker;
-  nixLdLibraryPath = lib.makeLibraryPath (
-    map lib.getLib (defaultNixLdLibraryPackages ++ nixLdLibraryPathPackages)
-  );
+  nixLdRealLinker = pkgs.stdenv.cc.bintools.dynamicLinker;
+  allNixLdLibraries = nixLdLibraries ++ extraNixLdLibraries;
+  # The library store paths enter the image via Nix's string context tracking:
+  # lib.makeLibraryPath produces strings carrying references to each library's
+  # store path, and buildLayeredImage includes all store paths referenced by
+  # config.Env strings in the image closure. The libraries do not need to be
+  # added to contents/allPackages explicitly.
+  nixLdLibraryPath = lib.makeLibraryPath (map lib.getLib allNixLdLibraries);
   nixLdDeps = lib.optionals withNixLd [ pkgs.nix-ld ];
 
   allPackages = [ agent ] ++ basePackages ++ extraPackages ++ nixDeps ++ nixLdDeps;
@@ -148,8 +159,8 @@ let
   '';
 
   nixLdFakeRootCommands = lib.optionalString withNixLd ''
-    mkdir -p .${nixLdLinkDir}
-    ln -s ${lib.escapeShellArg nixLdTarget} .${nixLdLinkPath}
+    mkdir -p ${lib.escapeShellArg ".${nixLdLinkDir}"}
+    ln -s ${lib.escapeShellArg nixLdTarget} ${lib.escapeShellArg ".${nixLdLinkPath}"}
   '';
 
   nixEnvVars = lib.optionals withNix [
@@ -157,10 +168,18 @@ let
     "NIX_PATH=nixpkgs=${pkgs.path}"
   ];
 
-  nixLdEnvVars = lib.optionals withNixLd [
-    "NIX_LD=${nixLdDefault}"
-    "NIX_LD_LIBRARY_PATH=${nixLdLibraryPath}"
-  ];
+  nixLdEnvPairs = {
+    NIX_LD = nixLdRealLinker;
+    NIX_LD_LIBRARY_PATH = nixLdLibraryPath;
+  };
+
+  # Filter out any nix-ld vars that the user overrides via extraEnv,
+  # avoiding duplicate env var names (matching the xdgEnvVars pattern).
+  nixLdEnvVars = lib.optionals withNixLd (
+    lib.mapAttrsToList (k: v: "${k}=${v}") (
+      lib.filterAttrs (k: _: !(lib.hasAttr k extraEnv)) nixLdEnvPairs
+    )
+  );
 in
 assert lib.assertMsg (lib.all (d: lib.hasPrefix "/" d)
   ownedDirectories
