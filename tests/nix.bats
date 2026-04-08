@@ -59,3 +59,11 @@ setup() {
   [[ ${status} -eq 0 ]]
   [[ -n ${output} ]]
 }
+
+@test "nix eval works with pinned nixpkgs" {
+  # Verify the pinned nixpkgs can be evaluated. Catches nixpkgs updates
+  # that break the NIX_PATH or the Nix evaluator itself.
+  run run_in -- "${IMAGE}" 'nix eval nixpkgs#hello.name'
+  [[ ${status} -eq 0 ]]
+  [[ ${output} == *"hello"* ]]
+}

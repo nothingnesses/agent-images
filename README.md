@@ -459,7 +459,7 @@ You will also need to wire up the shell hook. Add an `extraEnv` entry or configu
 ### Known Limitations
 
 - **No build sandbox**: Nix builds inside the container run with `sandbox = false` because container runtimes typically restrict namespace creation. Builds are not hermetic - a derivation that succeeds in the container may fail in a sandboxed environment. If your container runs with elevated privileges, you can override this by mounting a custom `nix.conf` with `sandbox = relaxed` or `sandbox = true`.
-- **Image size**: Enabling `withNix` and/or `withNixLd` adds extra runtime components to the image. `withNix` typically adds roughly 50-150 MB depending on the nixpkgs pin; `withNixLd` size depends on the `nixLdLibraries` set; the default includes `systemd` and its dependencies, which can add significant size.
+- **Image size**: Enabling `withNix` and/or `withNixLd` adds extra runtime components to the image. `withNix` adds roughly 80 MB and `withNixLd` with the default library set adds roughly 40 MB (both vary with the nixpkgs pin). A custom `nixLdLibraries` with fewer packages will be smaller.
 - **Rootless Podman UID remapping**: Rootless Podman remaps UIDs by default, which can cause permission errors when writing to `/nix/store`, `/tmp`, or `$HOME` inside the container. If you encounter these errors, pass `--userns=keep-id` to map your host UID directly into the container. Docker and rootful Podman do not have this issue.
   ```bash
   podman run --rm -it \
@@ -498,6 +498,7 @@ just test nix-install                     # runtime install + nix develop (requi
 just test nix-custom                      # custom user/uid/gid, experimental features, extraEnv, nix-ld (with Nix)
 just test nix-ld                          # nix-ld without Nix CLI (standalone nix-ld)
 just test nix-ld-minimal                  # nix-ld with custom minimal library set
+just test minimal                         # minimal basePackages (bash, coreutils, cacert only)
 just test custom                          # custom user/uid/gid/workingDir, extraPackages, extraEnv (without Nix)
 just test nix-userns                      # Nix with --userns=keep-id (Podman only, skipped under Docker)
 just test-all                             # run all of the above

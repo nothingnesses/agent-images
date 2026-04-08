@@ -32,6 +32,22 @@ setup() {
   [[ ${status} -eq 0 ]]
 }
 
+@test "NIX_LD_LIBRARY_PATH directories exist and contain shared objects" {
+  # Verify that every directory in NIX_LD_LIBRARY_PATH is present in the
+  # image and contains .so files. Catches nixpkgs updates that change a
+  # package's output structure or break the string context mechanism.
+  # shellcheck disable=SC2016
+  run run_in -- "${IMAGE}" '
+    IFS=: read -ra dirs <<< "$NIX_LD_LIBRARY_PATH"
+    [ ${#dirs[@]} -gt 0 ] || exit 1
+    for dir in "${dirs[@]}"; do
+      [ -d "$dir" ] || { echo "missing: $dir"; exit 1; }
+      ls "$dir"/*.so* >/dev/null 2>&1 || { echo "no .so files in: $dir"; exit 1; }
+    done
+  '
+  [[ ${status} -eq 0 ]]
+}
+
 @test "dynamic linker symlink exists at expected path" {
   # shellcheck disable=SC2016
   run run_in -- "${IMAGE}" '
