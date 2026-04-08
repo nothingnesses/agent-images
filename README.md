@@ -484,31 +484,33 @@ This is useful for reducing disk usage but couples the container to the host's N
 
 ## Development
 
+All development commands are available via [just](https://github.com/casey/just). Enter the dev shell with `nix develop` to get `just` and all other tools on your PATH.
+
 ### Tests
 
 Tests are Linux-only (they build and run container images). On macOS, specify the system explicitly, e.g. `nix run .#apps.x86_64-linux.test`.
 
 ```bash
-nix run .#test-default                    # default image (opencode)
-AGENT=codex nix run .#test-default        # or specify any agent
-nix run .#test-nix                        # basic Nix checks (offline)
-nix run .#test-nix-install                # runtime install + nix develop (requires network)
-nix run .#test-nix-custom                 # custom user/uid/gid, experimental features, extraEnv, nix-ld (with Nix)
-nix run .#test-nix-ld                     # nix-ld without Nix CLI (standalone nix-ld)
-nix run .#test-nix-ld-minimal             # nix-ld with custom minimal library set
-nix run .#test-custom                     # custom user/uid/gid/workingDir, extraPackages, extraEnv (without Nix)
-nix run .#test-nix-userns                 # Nix with --userns=keep-id (Podman only, skipped under Docker)
-nix run .#test                            # run all of the above
+just test default                         # default image (opencode)
+AGENT=codex just test default             # or specify any agent
+just test nix                             # basic Nix checks (offline)
+just test nix-install                     # runtime install + nix develop (requires network)
+just test nix-custom                      # custom user/uid/gid, experimental features, extraEnv, nix-ld (with Nix)
+just test nix-ld                          # nix-ld without Nix CLI (standalone nix-ld)
+just test nix-ld-minimal                  # nix-ld with custom minimal library set
+just test custom                          # custom user/uid/gid/workingDir, extraPackages, extraEnv (without Nix)
+just test nix-userns                      # Nix with --userns=keep-id (Podman only, skipped under Docker)
+just test-all                             # run all of the above
 ```
 
 ### Formatting
 
 ```bash
-nix fmt        # format all files (Nix, shell, YAML, Markdown)
-nix fmt -- --ci  # check without modifying (used in CI)
+just fmt             # format all files (Nix, shell, YAML, Markdown)
+just fmt -- --ci     # check without modifying (used in CI)
 ```
 
-Pre-commit hooks are set up automatically when entering the dev shell (`nix develop`). They run `nix fmt` on staged files before each commit.
+Pre-commit hooks are set up automatically when entering the dev shell (`nix develop`). They run `nix fmt`, `deadnix`, and `actionlint` on staged files before each commit. Shellcheck runs as a pre-push hook on `.bats`, `.bash`, and `.sh` files.
 
 The SHA of any bulk formatting commit should be added to [.git-blame-ignore-revs](.git-blame-ignore-revs) and configured locally with:
 
@@ -519,10 +521,18 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 ### Linting
 
 ```bash
-nix run .#lint        # run all linters
-nix run .#shellcheck  # run shellcheck across all test files
-nix run .#deadnix     # find unused bindings in Nix files
-nix run .#actionlint  # validate GitHub Actions workflow files
+just lint            # run all linters (shellcheck, deadnix, actionlint)
+just shellcheck      # run shellcheck across all test files
+just deadnix         # find unused bindings in Nix files
+just actionlint      # validate GitHub Actions workflow files
+```
+
+### Full Verification
+
+Run format check, all linters, and all tests in sequence:
+
+```bash
+just verify
 ```
 
 ## License

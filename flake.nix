@@ -222,6 +222,13 @@
                 enable = true;
                 package = pkgs.actionlint;
               };
+              shellcheck = {
+                enable = true;
+                package = pkgs.shellcheck;
+                stages = [ "pre-push" ];
+                files = "\\.(bats|bash|sh)$";
+                entry = "${pkgs.shellcheck}/bin/shellcheck --enable=all";
+              };
             };
           };
 
@@ -299,6 +306,7 @@
               pkgs.actionlint
               pkgs.bats
               pkgs.deadnix
+              pkgs.just
               pkgs.shellcheck
             ];
             inherit (pre-commit-check) shellHook;
