@@ -410,7 +410,11 @@ mkAgentImage {
 
 This adds `pkgs.nix-ld`, creates the architecture-appropriate dynamic linker symlink inside the image, and sets `NIX_LD`/`NIX_LD_LIBRARY_PATH` automatically.
 
-By default, `NIX_LD` points to the system dynamic linker and `NIX_LD_LIBRARY_PATH` mirrors the upstream NixOS `programs.nix-ld` default library set. If your foreign binary needs more shared libraries, extend the search path with `nixLdLibraryPathPackages`:
+By default, `NIX_LD` points to the system dynamic linker and `NIX_LD_LIBRARY_PATH` includes a default set of common libraries mirrored from the upstream NixOS `programs.nix-ld` module (including glibc, openssl, zlib, curl, systemd, and others). Most foreign binaries will work out of the box without any additional configuration.
+
+The default set mirrors upstream NixOS, which includes `systemd` and its transitive dependencies. This ensures broad compatibility but adds significant closure size.
+
+If your foreign binary needs additional shared libraries beyond the defaults, use `extraNixLdLibraries`:
 
 ```nix
 mkAgentImage {
@@ -418,10 +422,19 @@ mkAgentImage {
   agent = my-agent-package;
   entrypoint = [ "my-agent" ];
   withNixLd = true;
-  nixLdLibraryPathPackages = [
-    pkgs.openssl
-    pkgs.zlib
-  ];
+  extraNixLdLibraries = with pkgs; [ SDL2 libGL ];
+};
+```
+
+To replace the entire default library set (for example, to minimize image size), pass `nixLdLibraries`. This **replaces** the defaults rather than extending them, so your foreign binaries must be able to find all their dependencies in the list you provide:
+
+```nix
+mkAgentImage {
+  name = "my-agent";
+  agent = my-agent-package;
+  entrypoint = [ "my-agent" ];
+  withNixLd = true;
+  nixLdLibraries = with pkgs; [ zlib openssl ];
 };
 ```
 
@@ -446,7 +459,7 @@ You will also need to wire up the shell hook. Add an `extraEnv` entry or configu
 ### Known Limitations
 
 - **No build sandbox**: Nix builds inside the container run with `sandbox = false` because container runtimes typically restrict namespace creation. Builds are not hermetic - a derivation that succeeds in the container may fail in a sandboxed environment. If your container runs with elevated privileges, you can override this by mounting a custom `nix.conf` with `sandbox = relaxed` or `sandbox = true`.
-- **Image size**: Enabling `withNix` and/or `withNixLd` adds extra runtime components to the image. `withNix` typically adds roughly 50-150 MB depending on the nixpkgs pin; `withNixLd` is much smaller but still increases image size.
+- **Image size**: Enabling `withNix` and/or `withNixLd` adds extra runtime components to the image. `withNix` typically adds roughly 50-150 MB depending on the nixpkgs pin; `withNixLd` size depends on the `nixLdLibraries` set; the default includes `systemd` and its dependencies, which can add significant size.
 - **Rootless Podman UID remapping**: Rootless Podman remaps UIDs by default, which can cause permission errors when writing to `/nix/store`, `/tmp`, or `$HOME` inside the container. If you encounter these errors, pass `--userns=keep-id` to map your host UID directly into the container. Docker and rootful Podman do not have this issue.
   ```bash
   podman run --rm -it \
@@ -481,6 +494,8 @@ AGENT=codex nix run .#test-default        # or specify any agent
 nix run .#test-nix                        # basic Nix checks (offline)
 nix run .#test-nix-install                # runtime install + nix develop (requires network)
 nix run .#test-nix-custom                 # custom user/uid/gid, experimental features, extraEnv, nix-ld (with Nix)
+nix run .#test-nix-ld                     # nix-ld without Nix CLI (standalone nix-ld)
+nix run .#test-nix-ld-minimal             # nix-ld with custom minimal library set
 nix run .#test-custom                     # custom user/uid/gid/workingDir, extraPackages, extraEnv (without Nix)
 nix run .#test-nix-userns                 # Nix with --userns=keep-id (Podman only, skipped under Docker)
 nix run .#test                            # run all of the above

@@ -86,6 +86,11 @@
             zeroclaw = { };
           };
 
+          # The conventional dynamic linker symlink path, read from nix-ld's
+          # metadata. Used by test images so tests can check the exact path
+          # instead of searching with find.
+          nixLdLinkPath = lib.removeSuffix "\n" (builtins.readFile "${pkgs.nix-ld}/nix-support/ldpath");
+
           # Test images
           nixTestImage = mkAgentImage {
             name = "agent-images/nix-test";
@@ -109,12 +114,48 @@
               "pipe-operators"
             ];
             extraPackages = [
-              pkgs.hello
-              pkgs.patchelf
+              pkgs.hello # test binary for nix-ld interpreter patching
+              pkgs.patchelf # used by tests to patch ELF interpreter and strip RPATH
             ];
             extraEnv = {
               MY_VAR = "test-value";
               EXPECTED_NIX_LD = pkgs.stdenv.cc.bintools.dynamicLinker;
+              EXPECTED_NIX_LD_LINK_PATH = nixLdLinkPath;
+            };
+          };
+
+          nixLdTestImage = mkAgentImage {
+            name = "agent-images/nix-ld-test";
+            agent = agents.opencode;
+            entrypoint = [ agents.opencode.meta.mainProgram ];
+            withNixLd = true;
+            extraPackages = [
+              pkgs.hello # test binary for nix-ld interpreter patching
+              pkgs.patchelf # used by tests to patch ELF interpreter and strip RPATH
+              pkgs.bzip2 # test binary that links against libbz2 (in default nix-ld library set)
+            ];
+            extraEnv = {
+              EXPECTED_NIX_LD = pkgs.stdenv.cc.bintools.dynamicLinker;
+              EXPECTED_NIX_LD_LINK_PATH = nixLdLinkPath;
+            };
+          };
+
+          nixLdMinimalTestImage = mkAgentImage {
+            name = "agent-images/nix-ld-minimal-test";
+            agent = agents.opencode;
+            entrypoint = [ agents.opencode.meta.mainProgram ];
+            withNixLd = true;
+            nixLdLibraries = with pkgs; [
+              zlib
+              openssl
+            ];
+            extraPackages = [
+              pkgs.hello # test binary for nix-ld interpreter patching
+              pkgs.patchelf # used by tests to patch ELF interpreter and strip RPATH
+            ];
+            extraEnv = {
+              EXPECTED_NIX_LD = pkgs.stdenv.cc.bintools.dynamicLinker;
+              EXPECTED_NIX_LD_LINK_PATH = nixLdLinkPath;
             };
           };
 
@@ -220,6 +261,8 @@
             // {
               nix-test-image = nixTestImage;
               nix-test-image-custom = nixTestImageCustom;
+              nix-ld-test-image = nixLdTestImage;
+              nix-ld-minimal-test-image = nixLdMinimalTestImage;
               custom-test-image = customTestImage;
             };
 
@@ -269,6 +312,8 @@
               vars.SYSTEM = system;
             };
             test-nix-custom = mkTest { name = "nix-custom"; };
+            test-nix-ld = mkTest { name = "nix-ld"; };
+            test-nix-ld-minimal = mkTest { name = "nix-ld-minimal"; };
             test-nix-userns = mkTest { name = "nix-userns"; };
             test-custom = mkTest { name = "custom"; };
             test = {
