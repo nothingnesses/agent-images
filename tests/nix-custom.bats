@@ -84,3 +84,51 @@ setup() {
   [[ ${status} -eq 0 ]]
   [[ -n ${output} ]]
 }
+
+@test "nix-ld is available" {
+  run run_in -- "${IMAGE}" 'command -v nix-ld'
+  [[ ${status} -eq 0 ]]
+}
+
+@test "NIX_LD env vars are set" {
+  # shellcheck disable=SC2016
+  run run_in -- "${IMAGE}" '
+    [ -n "$NIX_LD" ] &&
+    [ -x "$NIX_LD" ] &&
+    [ -n "$NIX_LD_LIBRARY_PATH" ]
+  '
+  [[ ${status} -eq 0 ]]
+}
+
+@test "dynamic linker symlink points to nix-ld" {
+  # shellcheck disable=SC2016
+  run run_in -- "${IMAGE}" '
+    link=$(find /lib /lib32 /lib64 -maxdepth 1 -type l 2>/dev/null | head -1)
+    [ -n "$link" ] || exit 1
+    [ "$(readlink -f "$link")" = "$(readlink -f "$(command -v nix-ld)")" ]
+  '
+  [[ ${status} -eq 0 ]]
+}
+
+@test "NIX_LD points to the real dynamic linker, not nix-ld" {
+  # shellcheck disable=SC2016
+  run run_in -- "${IMAGE}" '
+    [ -n "$EXPECTED_NIX_LD" ] &&
+    [ "$(readlink -f "$NIX_LD")" = "$(readlink -f "$EXPECTED_NIX_LD")" ] &&
+    [ "$(readlink -f "$NIX_LD")" != "$(readlink -f "$(command -v nix-ld)")" ]
+  '
+  [[ ${status} -eq 0 ]]
+}
+
+@test "nix-ld runs an unpatched binary via the conventional loader path" {
+  # shellcheck disable=SC2016
+  run run_in -- "${IMAGE}" '
+    link=$(find /lib /lib32 /lib64 -maxdepth 1 -type l 2>/dev/null | head -1)
+    [ -n "$link" ] || exit 1
+    cp "$(command -v hello)" /tmp/hello-foreign
+    chmod u+w /tmp/hello-foreign
+    patchelf --set-interpreter "$link" /tmp/hello-foreign
+    /tmp/hello-foreign | grep -q "Hello, world!"
+  '
+  [[ ${status} -eq 0 ]]
+}

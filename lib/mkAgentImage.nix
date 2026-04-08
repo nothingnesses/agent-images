@@ -19,6 +19,25 @@ let
     gzip
     which
   ];
+
+  # Keep in sync with nixpkgs:
+  # nixos/modules/programs/nix-ld.nix
+  defaultNixLdLibraryPackages = with pkgs; [
+    zlib
+    zstd
+    stdenv.cc.cc
+    curl
+    openssl
+    attr
+    libssh
+    bzip2
+    libxml2
+    acl
+    libsodium
+    util-linux
+    xz
+    systemd
+  ];
 in
 
 {
@@ -40,6 +59,8 @@ in
     "nix-command"
     "flakes"
   ],
+  withNixLd ? false,
+  nixLdLibraryPathPackages ? [ ],
 }:
 
 let
@@ -52,7 +73,17 @@ let
     nixPackage
     nixConf
   ];
-  allPackages = [ agent ] ++ basePackages ++ extraPackages ++ nixDeps;
+
+  nixLdLinkPath = lib.removeSuffix "\n" (builtins.readFile "${pkgs.nix-ld}/nix-support/ldpath");
+  nixLdLinkDir = builtins.dirOf nixLdLinkPath;
+  nixLdTarget = "${pkgs.nix-ld}/libexec/nix-ld";
+  nixLdDefault = pkgs.stdenv.cc.bintools.dynamicLinker;
+  nixLdLibraryPath = lib.makeLibraryPath (
+    map lib.getLib (defaultNixLdLibraryPackages ++ nixLdLibraryPathPackages)
+  );
+  nixLdDeps = lib.optionals withNixLd [ pkgs.nix-ld ];
+
+  allPackages = [ agent ] ++ basePackages ++ extraPackages ++ nixDeps ++ nixLdDeps;
 
   home = "/home/${user}";
   uidStr = toString uid;
@@ -116,9 +147,19 @@ let
     chown -R ${uidStr}:${gidStr} ./nix
   '';
 
+  nixLdFakeRootCommands = lib.optionalString withNixLd ''
+    mkdir -p .${nixLdLinkDir}
+    ln -s ${lib.escapeShellArg nixLdTarget} .${nixLdLinkPath}
+  '';
+
   nixEnvVars = lib.optionals withNix [
     "NIX_CONF_DIR=/etc/nix"
     "NIX_PATH=nixpkgs=${pkgs.path}"
+  ];
+
+  nixLdEnvVars = lib.optionals withNixLd [
+    "NIX_LD=${nixLdDefault}"
+    "NIX_LD_LIBRARY_PATH=${nixLdLibraryPath}"
   ];
 in
 assert lib.assertMsg (lib.all (d: lib.hasPrefix "/" d)
@@ -154,7 +195,8 @@ pkgs.dockerTools.buildLayeredImage {
     chmod 1777 ./tmp
     chown ${uidStr}:${gidStr} ${ownedDirectoryArgs}
   ''
-  + nixFakeRootCommands;
+  + nixFakeRootCommands
+  + nixLdFakeRootCommands;
 
   config = {
     User = user;
@@ -168,6 +210,7 @@ pkgs.dockerTools.buildLayeredImage {
     ]
     ++ xdgEnvVars
     ++ nixEnvVars
+    ++ nixLdEnvVars
     ++ (lib.mapAttrsToList (k: v: "${k}=${v}") extraEnv);
   };
 }
