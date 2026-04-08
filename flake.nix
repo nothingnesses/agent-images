@@ -159,6 +159,17 @@
             };
           };
 
+          minimalTestImage = mkAgentImage {
+            name = "agent-images/minimal-test";
+            agent = agents.opencode;
+            entrypoint = [ agents.opencode.meta.mainProgram ];
+            basePackages = with pkgs; [
+              bashInteractive
+              coreutils
+              cacert
+            ];
+          };
+
           customTestImage = mkAgentImage {
             name = "agent-images/custom-test";
             agent = agents.opencode;
@@ -270,6 +281,7 @@
               nix-test-image-custom = nixTestImageCustom;
               nix-ld-test-image = nixLdTestImage;
               nix-ld-minimal-test-image = nixLdMinimalTestImage;
+              minimal-test-image = minimalTestImage;
               custom-test-image = customTestImage;
             };
 
@@ -323,6 +335,7 @@
             test-nix-ld = mkTest { name = "nix-ld"; };
             test-nix-ld-minimal = mkTest { name = "nix-ld-minimal"; };
             test-nix-userns = mkTest { name = "nix-userns"; };
+            test-minimal = mkTest { name = "minimal"; };
             test-custom = mkTest { name = "custom"; };
             test = {
               type = "app";

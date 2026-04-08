@@ -114,6 +114,16 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix run .#test-nix-ld
+      - name: Report image size delta
+        run: |
+          nix build .#opencode -o result-base
+          base_size=$(stat -Lc%s result-base)
+          nix build .#nix-ld-test-image -o result-nix-ld
+          nix_ld_size=$(stat -Lc%s result-nix-ld)
+          delta=$(( nix_ld_size - base_size ))
+          echo "Base image: $(( base_size / 1048576 )) MB"
+          echo "withNixLd image: $(( nix_ld_size / 1048576 )) MB"
+          echo "Delta: $(( delta / 1048576 )) MB"
 
   test-nix-ld-minimal:
     runs-on: ubuntu-latest
@@ -122,3 +132,11 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
       - run: nix run .#test-nix-ld-minimal
+
+  test-minimal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - run: nix run .#test-minimal
