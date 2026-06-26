@@ -66,7 +66,9 @@ Each image includes a default set of base packages: git, coreutils, bash, ripgre
 
 All other dependencies (including agent packages from [llm-agents.nix](https://github.com/numtide/llm-agents.nix)) are resolved automatically by the Nix flake. NixOS users should also follow the [rootless Podman setup](#nixos-rootless-podman-setup) steps below.
 
-**macOS:** Images are Linux-only. On macOS, specify the target system explicitly and ensure you have a [Linux remote builder](https://nix.dev/manual/nix/latest/advanced-topics/distributed-builds) configured (e.g. via Docker Desktop or nix-darwin's `linux-builder`):
+### macOS
+
+Images are Linux-only. On macOS, specify the target system explicitly and ensure you have a [Linux remote builder](https://nix.dev/manual/nix/latest/advanced-topics/distributed-builds) configured (e.g. via Docker Desktop or nix-darwin's `linux-builder`):
 
 ```bash
 nix build .#packages.x86_64-linux.<agent>
@@ -232,14 +234,18 @@ You also need a container trust policy. Create `~/.config/containers/policy.json
 
 ### Troubleshooting
 
-**Corrupted storage after failed load.** If `podman load` fails (e.g. because `/etc/subuid` was missing), Podman's storage may be corrupted. Fix with:
+#### Corrupted storage after failed load
+
+If `podman load` fails (e.g. because `/etc/subuid` was missing), Podman's storage may be corrupted. Fix with:
 
 ```bash
 podman system reset --force
 podman load < result
 ```
 
-**`newuidmap: Too many levels of symbolic links`.** This happens when `/etc/subuid` is a symlink (e.g. from `environment.etc` entries). NixOS setuid wrappers cannot follow symlinks. Remove any `environment.etc` entries for `subuid`/`subgid` and rely solely on `subUidRanges`/`subGidRanges`, which create real files. Rebuild and then reset Podman storage.
+#### `newuidmap: Too many levels of symbolic links`
+
+This happens when `/etc/subuid` is a symlink (e.g. from `environment.etc` entries). NixOS setuid wrappers cannot follow symlinks. Remove any `environment.etc` entries for `subuid`/`subgid` and rely solely on `subUidRanges`/`subGidRanges`, which create real files. Rebuild and then reset Podman storage.
 
 ## Custom Images
 
@@ -456,22 +462,13 @@ mkAgentImage {
 
 You will also need to wire up the shell hook. Add an `extraEnv` entry or configure `.bashrc` in the container's home directory to run `eval "$(direnv hook bash)"`.
 
-### Known Limitations
+### Sharing the Host Nix Store
 
-- **No build sandbox**: Nix builds inside the container run with `sandbox = false` because container runtimes typically restrict namespace creation. Builds are not hermetic - a derivation that succeeds in the container may fail in a sandboxed environment. If your container runs with elevated privileges, you can override this by mounting a custom `nix.conf` with `sandbox = relaxed` or `sandbox = true`.
-- **Image size**: Enabling `withNix` and/or `withNixLd` adds extra runtime components to the image. `withNix` adds roughly 80 MB and `withNixLd` with the default library set adds roughly 40 MB (both vary with the nixpkgs pin). A custom `nixLdLibraries` with fewer packages will be smaller.
-- **Rootless Podman UID remapping**: Rootless Podman remaps UIDs by default, which can cause permission errors when writing to `/nix/store`, `/tmp`, or `$HOME` inside the container. If you encounter these errors, pass `--userns=keep-id` to map your host UID directly into the container. Docker and rootful Podman do not have this issue.
-  ```bash
-  podman run --rm -it \
-    --userns=keep-id \
-    -v ./my-project:/workspace \
-    -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
-    localhost/agent-images/claude-code:latest
-  ```
+If the host has Nix installed, you can share its store with the container instead of duplicating store paths. There are two working approaches, with different trade-offs around installing new packages; a third (an ephemeral writable overlay) does not yet work under rootless Podman and is tracked under [Known Limitations](#known-limitations) below. Note that sharing the host store shadows the image's own store paths (including its bundled `nix`), so keep the host and image Nix versions compatible, or invoke the host's `nix` from the shared store.
 
-### Host Store Mount Optimisation
+#### Read-only bind mount (reuse only)
 
-If the host machine has Nix installed, you can bind-mount the host store read-only to avoid duplicating store paths:
+The container can run anything already in the host store, but cannot install new packages:
 
 ```bash
 podman run --rm -it \
@@ -480,7 +477,48 @@ podman run --rm -it \
   localhost/agent-images/my-agent:latest
 ```
 
-This is useful for reducing disk usage but couples the container to the host's Nix installation.
+This reduces disk usage but couples the container to the host's Nix installation.
+
+#### Daemon socket forwarding (reuse and install)
+
+To also install new packages, forward the host's Nix daemon socket and set `NIX_REMOTE=daemon`. The store stays read-only and the host daemon performs the writes, so `nix shell nixpkgs#<pkg>` works for packages not already present:
+
+```bash
+podman run --rm -it \
+  --mount type=bind,src=/nix/store,dst=/nix/store,ro \
+  --mount type=bind,src=/nix/var/nix/daemon-socket,dst=/nix/var/nix/daemon-socket \
+  -e NIX_REMOTE=daemon \
+  -v ./my-project:/workspace \
+  localhost/agent-images/my-agent:latest
+```
+
+Requires a running host `nix-daemon` (multi-user Nix). New packages are written to the host store, so they are shared and persist after the container exits (additive; existing paths are never modified). This is the most robust option for rootless Podman and needs no extra components. See agent-box's [guide](https://0xf.rs/agent-box/how-to/agent-box/share-host-nix-store.html) for the same approach in agent-box.
+
+### Known Limitations
+
+#### No build sandbox
+
+Nix builds inside the container run with `sandbox = false` because container runtimes typically restrict namespace creation. Builds are not hermetic - a derivation that succeeds in the container may fail in a sandboxed environment. If your container runs with elevated privileges, you can override this by mounting a custom `nix.conf` with `sandbox = relaxed` or `sandbox = true`.
+
+#### Image size
+
+Enabling `withNix` and/or `withNixLd` adds extra runtime components to the image. `withNix` adds roughly 80 MB and `withNixLd` with the default library set adds roughly 40 MB (both vary with the nixpkgs pin). A custom `nixLdLibraries` with fewer packages will be smaller.
+
+#### Rootless Podman UID remapping
+
+Rootless Podman remaps UIDs by default, which can cause permission errors when writing to `/nix/store`, `/tmp`, or `$HOME` inside the container. If you encounter these errors, pass `--userns=keep-id` to map your host UID directly into the container. Docker and rootful Podman do not have this issue.
+
+```bash
+podman run --rm -it \
+  --userns=keep-id \
+  -v ./my-project:/workspace \
+  -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+  localhost/agent-images/claude-code:latest
+```
+
+#### Writable overlay for store sharing (rootless)
+
+An ephemeral writable overlay over the host store (`-v /nix:/nix:O`) would let the container install packages without modifying the host store, but it does not yet work under rootless Podman. The overlaid host store is owned by uids not mapped into the user namespace, so it needs id-shifting: install `fuse-overlayfs` and set it as the overlay `mount_program` in `~/.config/containers/storage.conf`, or use a host with kernel idmapped-mount support. Even with `fuse-overlayfs` configured (`podman info` reporting `Supports shifting: true`), rootless `:O` overlay volumes failed on a NixOS test host with `chown ... invalid argument` and `setresgid ... invalid argument`. Tracked in [#95](https://github.com/nothingnesses/agent-images/issues/95); until it is resolved, use the daemon socket approach above.
 
 ## Development
 
