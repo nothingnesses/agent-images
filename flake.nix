@@ -69,10 +69,9 @@
             cursor-agent = { };
             droid = { };
             eca = { };
-            forge = { };
+            forge.agentPkg = "forgecode";
             gemini-cli = { };
             goose-cli = { };
-            iflow-cli = { };
             jules = { };
             kilocode-cli = { };
             letta-code = { };
